@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liberty — Life Assurance Portal</title>
+<style>
+
+/* ══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — change brand colours here
+══════════════════════════════════════════════════════════════ */
+:root {
+  --ink:         #0d1117;
+  --paper:       #DEEFFF;
+  --gray:        #CCCCCC;
+  --libertyblue: #112760;
+  --blue:        #002B99;
+  --pale-blue:   #74BBC9;
+  --slate:       #3d4a5c;
+  --muted:       #6b7a8d;
+  --green:       #1a6b4a;
+  --white:       #ffffff;
+  --shadow:      0 1px 8px rgba(13,17,23,0.10);
+  --shadow-lg:   0 4px 24px rgba(13,17,23,0.14);
+  --radius:      3px;
+  --radius-lg:   8px;
+  /* Typography — Arial-family throughout */
+  --font-body:   'Helvetica Neue', Arial, Helvetica, sans-serif;
+  --font-mono:   'Courier New', Courier, monospace;
+  --fs-base:     13px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: var(--fs-base);
+  line-height: 1.55;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { color: var(--pale-blue); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.01em; }
+.logo span { color: var(--white); font-weight: 400; }
+.header-tag { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  background: var(--gray);
+  border-bottom: 1px solid #b8c8d8;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  overflow-x: auto;
+}
+.step-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 18px 0 12px;
+  height: 30px; border-radius: 15px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--muted); white-space: nowrap; transition: all 0.25s;
+}
+.step-pill .num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #aab0bb; color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; flex-shrink: 0;
+  font-family: var(--font-mono); transition: background 0.25s;
+}
+.step-pill.active { color: var(--ink); }
+.step-pill.active .num { background: var(--libertyblue); }
+.step-pill.done { color: var(--green); }
+.step-pill.done .num { background: var(--green); }
+.step-arrow { color: #aab0bb; font-size: 0.75rem; padding: 0 2px; }
+
+/* ── MAIN ── */
+main { max-width: 900px; margin: 0 auto; padding: 36px 20px; }
+.section-title { font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.section-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 28px; }
+
+/* ── PRODUCT CARDS ── */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.product-card {
+  border: 2px solid var(--gray); border-radius: var(--radius-lg);
+  padding: 18px 16px; cursor: pointer; transition: all 0.2s;
+  background: var(--white); position: relative; overflow: hidden;
+}
+.product-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--libertyblue); transform: scaleX(0);
+  transform-origin: left; transition: transform 0.25s;
+}
+.product-card:hover { border-color: var(--blue); box-shadow: var(--shadow); }
+.product-card:hover::before { transform: scaleX(1); }
+.product-card.selected { border-color: var(--libertyblue); background: var(--pale-blue); }
+.product-card.selected::before { transform: scaleX(1); }
+.product-icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+.product-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+.product-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+.product-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--libertyblue); color: white;
+  font-size: 0.6rem; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+.product-card.selected .product-check { opacity: 1; }
+
+/* ── FORM LAYOUT ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.span-2 { grid-column: span 2; }
+label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate); }
+input, select, textarea {
+  border: 1.5px solid #A6CBDB; border-radius: var(--radius);
+  padding: 8px 11px; font-family: var(--font-body);
+  font-size: 0.82rem; color: var(--ink); background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--libertyblue);
+  box-shadow: 0 0 0 3px rgba(17,39,96,0.10);
+}
+.hint { font-size: 0.67rem; color: var(--muted); margin-top: 1px; }
+
+/* ── KES CURRENCY INPUT ── */
+.currency-wrap { position: relative; display: flex; align-items: stretch; }
+.currency-prefix {
+  display: flex; align-items: center; padding: 0 10px;
+  background: #e8f0f8; border: 1.5px solid #A6CBDB;
+  border-right: none; border-radius: var(--radius) 0 0 var(--radius);
+  font-size: 0.75rem; font-weight: 700; color: var(--libertyblue);
+  white-space: nowrap; letter-spacing: 0.03em;
+}
+.currency-wrap input {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  text-align: right; font-family: var(--font-mono); font-size: 0.85rem;
+}
+.currency-wrap input:focus { border-color: var(--libertyblue); box-shadow: 0 0 0 3px rgba(17,39,96,0.10); }
+
+/* ── TOGGLE SECTION ── */
+.toggle-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: #f0f5fa;
+  border: 1.5px solid #c8dcea; border-radius: var(--radius);
+  margin-bottom: 10px; cursor: pointer;
+}
+.toggle-label { font-size: 0.78rem; font-weight: 600; color: var(--slate); flex: 1; }
+.toggle-sub { font-size: 0.68rem; color: var(--muted); }
+.toggle-switch {
+  width: 36px; height: 20px; border-radius: 10px;
+  background: #c0cdd8; position: relative; flex-shrink: 0;
+  transition: background 0.2s; cursor: pointer;
+}
+.toggle-switch::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: white; top: 2px; left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on { background: var(--libertyblue); }
+.toggle-switch.on::after { transform: translateX(16px); }
+.toggle-content { display: none; padding: 16px; background: #f7fafd; border: 1.5px solid #c8dcea; border-top: none; border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 14px; }
+.toggle-content.open { display: block; }
+.toggle-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--libertyblue); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #c8dcea; }
+
+/* ── SUBSECTION LABEL ── */
+.subsection-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+  margin-bottom: 12px; margin-top: 4px;
+}
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+.btn {
+  padding: 9px 22px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.04em; cursor: pointer; border: 2px solid transparent;
+  transition: all 0.16s; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-primary { background: var(--libertyblue); color: var(--white); border-color: var(--libertyblue); }
+.btn-primary:hover { background: var(--blue); border-color: var(--blue); transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn-outline { background: transparent; color: var(--ink); border-color: #b0bfce; }
+.btn-outline:hover { border-color: var(--ink); background: var(--gray); }
+.btn-dark { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.btn-dark:hover { background: var(--slate); transform: translateY(-1px); }
+.btn-green { background: var(--green); color: var(--white); border-color: var(--green); }
+.btn-green:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--gray); margin: 22px 0; }
+
+/* ── LOADING STATE ── */
+.loading-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(13,17,23,0.45); z-index: 200;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: var(--pale-blue); border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.loading-msg { color: white; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── QUOTE SUMMARY ── */
+.quote-header {
+  background: var(--ink); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 26px 32px; color: white;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.qh-label { font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+.qh-product { font-size: 1.3rem; font-weight: 700; color: var(--pale-blue); }
+.qh-sub { font-size: 0.75rem; color: #a0aab4; margin-top: 3px; }
+.quote-ref { font-family: var(--font-mono); font-size: 0.67rem; color: var(--muted); text-align: right; }
+.quote-ref strong { display: block; font-size: 0.82rem; color: var(--pale-blue); letter-spacing: 0.08em; }
+.quote-body {
+  background: var(--white); border: 1px solid #c0ccd8;
+  border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden;
+}
+.quote-section { padding: 20px 32px; border-bottom: 1px solid var(--gray); }
+.quote-section:last-child { border-bottom: none; }
+.qs-title { font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px dotted #dde4ed; gap: 16px; }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 0.77rem; color: var(--slate); }
+.info-val { font-size: 0.82rem; font-weight: 700; color: var(--ink); font-family: var(--font-mono); text-align: right; }
+.benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.benefit-card { background: var(--paper); border-radius: var(--radius); padding: 13px; border: 1px solid var(--gray); }
+.bc-label { font-size: 0.67rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.bc-val { font-family: var(--font-mono); font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+.bc-val.highlight { color: var(--green); font-size: 1rem; }
+.bc-note { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+.free-benefit-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #e8f5f0; color: var(--green); border: 1px solid #b8dece;
+  border-radius: 20px; padding: 3px 10px; font-size: 0.7rem; font-weight: 700;
+  margin: 3px 3px 3px 0;
+}
+.premium-highlight {
+  background: var(--pale-blue); border: 1.5px solid var(--blue);
+  border-radius: var(--radius); padding: 14px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ph-label { font-size: 0.72rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.ph-val { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; color: var(--libertyblue); }
+.ph-freq { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.disclaimer { font-size: 0.67rem; color: var(--muted); background: var(--gray); border-radius: var(--radius); padding: 9px 12px; line-height: 1.5; margin-top: 8px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--ink); color: var(--white); padding: 10px 18px;
+  border-radius: var(--radius); font-size: 0.78rem; font-weight: 600;
+  box-shadow: var(--shadow-lg); z-index: 999; opacity: 0;
+  transform: translateY(10px); transition: all 0.25s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── SCREEN TRANSITIONS ── */
+.screen { display: none; animation: fadeUp 0.3s ease; }
+.screen.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── PRINT ── */
+@media print {
+  header, .progress-bar, .btn-row, .no-print { display: none !important; }
+  body { background: white; }
+  main { padding: 0; max-width: 100%; }
+  .quote-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .screen { display: block !important; }
+  #screen-1, #screen-2 { display: none !important; }
+}
+
+@media (max-width: 620px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.span-2 { grid-column: span 1; }
+  .quote-header { flex-direction: column; gap: 12px; }
+  .benefit-grid { grid-template-columns: 1fr 1fr; }
+  header { padding: 0 16px; }
+  .progress-bar { padding: 0 12px; }
+  main { padding: 20px 12px; }
+  .quote-section { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Liberty <span>Life Assurance</span></div>
+  <div class="header-tag">Products Portal · Quote Engine v1.0</div>
+</header>
+
+<div class="progress-bar">
+  <div class="step-pill active" id="pill-1"><span class="num">1</span> Select Product</div>
+  <div class="step-arrow">›</div>
+  <div class="step-pill" id="pill-2"><span class="num">2</span> Your Details</div>
+  <div class="step-arrow">›</div>
+  <div class="step-pill" id="pill-3"><span class="num">3</span> Quote Summary</div>
+</div>
+
+<!-- Loading overlay shown while awaiting Python response -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-msg">Calculating your quote…</div>
+</div>
+
+<main>
+
+<!-- ════════════════════════════════════════════════════════
+     SCREEN 1 — PRODUCT SELECTION
+════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-1">
+  <div class="section-title">Choose a Product Class</div>
+  <div class="section-sub">Select the life assurance product you'd like to quote</div>
+  <div class="product-grid" id="product-grid">
+    <!-- Cards injected by UI_buildProductGrid() in Section C -->
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-next-1" onclick="UI_goToStep2()" disabled>Continue to Details →</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SCREEN 2 — DETAILS FORM
+════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-2">
+  <div class="section-title" id="form-title">Your Details</div>
+  <div class="section-sub">Fill in your information to generate a personalised quote</div>
+
+  <!-- ── Common personal details (always shown) ── -->
+  <div class="subsection-label">Main Life — Personal Details</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>First Name <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-firstname" placeholder="e.g. Amara" />
+    </div>
+    <div class="form-group">
+      <label>Last Name <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-lastname" placeholder="e.g. Ochieng" />
+    </div>
+    <div class="form-group">
+      <label>Date of Birth <span style="color:#c0392b">*</span></label>
+      <input type="date" id="f-dob" />
+    </div>
+    <div class="form-group">
+      <label>Gender <span style="color:#c0392b">*</span></label>
+      <select id="f-gender">
+        <option value="">— select —</option>
+        <option value="M">Male</option>
+        <option value="F">Female</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Smoker Status</label>
+      <select id="f-smoker">
+        <option value="NS">Non-Smoker</option>
+        <option value="S">Smoker</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Occupation <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-occupation" placeholder="e.g. Software Engineer" />
+      <span class="hint">Occupation class will be determined during underwriting</span>
+    </div>
+    <div class="form-group">
+      <label>Employer <span style="color:#888">(optional)</span></label>
+      <input type="text" id="f-employer" placeholder="e.g. Kenya Commercial Bank" />
+    </div>
+    <div class="form-group">
+      <label>Email Address <span style="color:#c0392b">*</span></label>
+      <input type="email" id="f-email" placeholder="e.g. amara@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="tel" id="f-phone" placeholder="e.g. +254 7XX XXX XXX" />
+    </div>
+    <div class="form-group">
+      <label>ID / Passport Number</label>
+      <input type="text" id="f-idno" placeholder="National ID or Passport" />
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Product-specific fields (injected by UI_buildProductFields()) ── -->
+  <div id="product-fields"></div>
+
+  <hr class="divider">
+
+  <!-- ── Premium frequency ── -->
+  <div class="form-grid" style="margin-bottom: 0;">
+    <div class="form-group">
+      <label>Premium Frequency</label>
+      <select id="f-freq">
+        <option value="monthly">Monthly</option>
+        <option value="quarterly">Quarterly</option>
+        <option value="annually">Annual</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="UI_goToStep1()">← Back</button>
+    <button class="btn btn-primary" onclick="UI_submitForQuote()">Generate Quote →</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     SCREEN 3 — QUOTE SUMMARY
+════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-3">
+  <div id="quote-container"></div>
+  <div class="btn-row no-print" style="margin-top: 22px;">
+    <button class="btn btn-outline" onclick="UI_goToStep2()">← Edit Details</button>
+    <button class="btn btn-outline" onclick="UI_startOver()">⟳ New Quote</button>
+    <button class="btn btn-dark" onclick="window.print()">🖨️ Print Quote</button>
+    <button class="btn btn-green" onclick="UI_sendToSales()">✉️ Send to Sales</button>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SECTION A — PRODUCT CATALOGUE
+   ══════════════════════════════════════════════════════════════════════════════
+   This object defines what products exist, what fields are shown on the form,
+   and which optional toggles are available.
+
+   TO ADD A NEW PRODUCT:
+     1. Add a key to PRODUCT_CATALOGUE with the fields below.
+     2. Add any new field templates to FIELD_TEMPLATES if needed.
+     3. No other changes required — the UI and engine pick it up automatically.
+
+   TO EDIT AN EXISTING PRODUCT (e.g. change the term range):
+     Modify the relevant entry in PRODUCT_CATALOGUE.fields or FIELD_TEMPLATES.
+
+   FIELDS REFERENCE:
+     fields[]         — array of field IDs rendered in the product-specific section.
+                        Each ID maps to a template in FIELD_TEMPLATES below.
+     hasPartialMat    — show the "Partial Maturities" toggle (term life, education)
+     hasJointLife     — show the "Joint Life" toggle (term, wholelife, education)
+══════════════════════════════════════════════════════════════════════════════ */
+const PRODUCT_CATALOGUE = {
+  term: {
+    label:         'Term Life Assurance',
+    icon:          '🛡️',
+    desc:          'Pure protection cover for a fixed term. Pays sum assured on death within the term.',
+    fields:        ['sum-assured', 'term'],
+    hasPartialMat: true,
+    hasJointLife:  true,
+  },
+  wholelife: {
+    label:         'Whole Life Assurance',
+    icon:          '♾️',
+    desc:          'Lifetime cover with guaranteed payout and optional savings element.',
+    fields:        ['sum-assured'],
+    hasPartialMat: false,
+    hasJointLife:  true,
+  },
+  endowment: {
+    label:         'Endowment / Savings',
+    icon:          '💰',
+    desc:          'Protection + disciplined savings. Pays out on maturity or earlier death.',
+    fields:        ['sum-assured', 'term'],
+    hasPartialMat: false,
+    hasJointLife:  false,
+  },
+  withprofit: {
+    label:         'With-Profit Policy',
+    icon:          '📈',
+    desc:          'Bonuses (reversionary & terminal) added to sum assured over the policy term.',
+    fields:        ['sum-assured', 'term'],
+    hasPartialMat: false,
+    hasJointLife:  false,
+  },
+  pension: {
+    label:         'Individual Pension',
+    icon:          '🧓',
+    desc:          'Systematic retirement savings with annuity payout at a selected retirement age.',
+    fields:        ['contribution', 'retirement-age'],
+    hasPartialMat: false,
+    hasJointLife:  false,
+  },
+  education: {
+    label:         'Soma Plan',
+    icon:          '🎓',
+    desc:          'Saves for education funds at defined milestones for your child.',
+    fields:        ['target-amount', 'term', 'child-name', 'child-dob'],
+    hasPartialMat: true,
+    hasJointLife:  true,
+  },
+};
+
+/*
+   FIELD TEMPLATES — HTML snippets for each reusable form field.
+   To change min/max/default values on a monetary field, edit the
+   data-min / data-max attributes and the placeholder text here.
+*/
+const FIELD_TEMPLATES = {
+
+  /* Sum Assured — KES currency input */
+  'sum-assured': `
+    <div class="form-group">
+      <label>Sum Assured (KES) <span style="color:#c0392b">*</span></label>
+      <div class="currency-wrap">
+        <span class="currency-prefix">KES</span>
+        <input type="number" id="f-sa" min="100000" max="10000000" step="50000"
+          placeholder="500,000" value=""
+          oninput="UI_formatCurrencyInput(this)" />
+      </div>
+      <span class="hint">Minimum KES 100,000 · Maximum KES 10,000,000</span>
+    </div>`,
+
+  /* Policy term in years */
+  'term': `
+    <div class="form-group">
+      <label>Policy Term (Years) <span style="color:#c0392b">*</span></label>
+      <input type="number" id="f-term" min="5" max="35" step="1" placeholder="e.g. 15" />
+      <span class="hint">Between 5 and 35 years</span>
+    </div>`,
+
+  /* Monthly pension contribution */
+  'contribution': `
+    <div class="form-group">
+      <label>Monthly Pension Contribution (KES) <span style="color:#c0392b">*</span></label>
+      <div class="currency-wrap">
+        <span class="currency-prefix">KES</span>
+        <input type="number" id="f-contrib" min="2000" max="200000" step="500"
+          placeholder="10,000" value=""
+          oninput="UI_formatCurrencyInput(this)" />
+      </div>
+      <span class="hint">Minimum KES 2,000/month</span>
+    </div>`,
+
+  /* Retirement age selector */
+  'retirement-age': `
+    <div class="form-group">
+      <label>Target Retirement Age</label>
+      <select id="f-retire">
+        <option value="55">55 years</option>
+        <option value="60" selected>60 years</option>
+        <option value="65">65 years</option>
+      </select>
+    </div>`,
+
+  /* Target education fund */
+  'target-amount': `
+    <div class="form-group">
+      <label>Target Education Fund (KES) <span style="color:#c0392b">*</span></label>
+      <div class="currency-wrap">
+        <span class="currency-prefix">KES</span>
+        <input type="number" id="f-target" min="200000" max="5000000" step="100000"
+          placeholder="1,000,000" value=""
+          oninput="UI_formatCurrencyInput(this)" />
+      </div>
+      <span class="hint">Minimum KES 200,000 · Maximum KES 5,000,000</span>
+    </div>`,
+
+  /* Child details */
+  'child-name': `
+    <div class="form-group">
+      <label>Child's Name</label>
+      <input type="text" id="f-childname" placeholder="e.g. Zawadi Ochieng" />
+    </div>`,
+  'child-dob': `
+    <div class="form-group">
+      <label>Child's Date of Birth</label>
+      <input type="date" id="f-childdob" />
+    </div>`,
+};
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SECTION B — CALCULATION ENGINE
+   ══════════════════════════════════════════════════════════════════════════════
+   This section is the ONLY place that produces premium figures and benefit
+   lists. The UI (Section C) only reads from this section — it never does
+   any arithmetic itself.
+
+   CURRENT SOURCE: Python script (called via fetch to a local HTTP endpoint).
+
+   ──────────────────────────────────────────────────────────────────────────
+   HOW TO SWITCH CALCULATION SOURCE
+   ──────────────────────────────────────────────────────────────────────────
+
+   OPTION 1 — Python / R script (current, active)
+     Run a small Flask or FastAPI server alongside this HTML file.
+     The server exposes POST /quote and accepts the payload below.
+     To switch from Python to R, the server-side changes; the JS stays the same.
+
+     Minimal Flask example (save as quote_server.py):
+     ┌─────────────────────────────────────────────────────────┐
+     │  from flask import Flask, request, jsonify              │
+     │  from flask_cors import CORS                            │
+     │  app = Flask(__name__)                                  │
+     │  CORS(app)                                              │
+     │  @app.route('/quote', methods=['POST'])                 │
+     │  def quote():                                           │
+     │      data = request.json                               │
+     │      # call your actuarial script here                  │
+     │      return jsonify({ "premium": ..., "benefits": [...] })│
+     │  app.run(port=5050)                                     │
+     └─────────────────────────────────────────────────────────┘
+     Then set PYTHON_ENDPOINT below to "http://localhost:5050/quote".
+
+   OPTION 2 — Excel workbook (commented out below)
+     Connect via a backend proxy that opens the workbook with xlwings or
+     openpyxl and reads named ranges, OR use SheetJS in the browser to
+     parse a locally-loaded .xlsx file.
+     See the commented block EXCEL_ENGINE below.
+
+   OPTION 3 — Pure JS fallback (for offline/demo use)
+     The JS_FALLBACK_ENGINE below runs if the Python endpoint is unreachable.
+     It uses simplified illustrative rates. Clearly labelled as illustrative.
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── B1: Endpoint configuration ── */
+
+/**
+ * PYTHON_ENDPOINT — URL of the Python/R calculation server.
+ * Change this to match where your script is running.
+ * e.g. "http://localhost:5050/quote"  (local Flask/FastAPI)
+ *      "https://your-server.com/api/quote"  (hosted)
+ */
+const PYTHON_ENDPOINT = "http://localhost:5050/quote";
+
+/**
+ * USE_PYTHON_ENGINE — set to true to call the Python server.
+ * Set to false to always use the JS fallback (demo/offline mode).
+ */
+const USE_PYTHON_ENGINE = true;
+
+/* ── B2: Main entry point called by the UI ── */
+
+/**
+ * CALC_getQuote(payload) → Promise<QuoteResult>
+ *
+ * Payload sent to the engine (Python or JS fallback):
+ * {
+ *   product:            string   e.g. "term"
+ *   age:                number   main life age at entry
+ *   gender:             "M"|"F"
+ *   smoker:             "S"|"NS"
+ *   term:               number|null  years (null for whole-life / pension)
+ *   sa:                 number|null  sum assured in KES
+ *   contribution:       number|null  monthly contribution (pension)
+ *   target:             number|null  target fund (education)
+ *   retireAge:          number|null  target retirement age (pension)
+ *   freq:               "monthly"|"quarterly"|"annually"
+ *   partialMat:         { enabled: bool, count: number }
+ *   jointLife:          { enabled: bool, age, gender, name, dob, email, phone }
+ * }
+ *
+ * Expected response shape from Python server (or JS fallback):
+ * {
+ *   premium:            number   (in the chosen frequency unit)
+ *   benefits:           Array<{ risk: string, coverage: string, note: string, highlight: bool }>
+ *   freeBenefits:       string[]
+ *   note:               string   (disclaimer / projection note)
+ *   details:            Array<[label, value]>  (policy parameters for the summary)
+ * }
+ */
+async function CALC_getQuote(payload) {
+  if (USE_PYTHON_ENGINE) {
+    try {
+      const resp = await fetch(PYTHON_ENDPOINT, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        signal:  AbortSignal.timeout(12000), // 12-second timeout
+      });
+      if (!resp.ok) throw new Error(`Server responded ${resp.status}`);
+      return await resp.json();
+    } catch (err) {
+      console.warn('[QuoteEngine] Python endpoint unreachable — falling back to JS engine.', err.message);
+      showToast('⚠️ Using offline estimates — Python server not reachable');
+      return JS_FALLBACK_ENGINE(payload);
+    }
+  }
+  // USE_PYTHON_ENGINE = false → always use JS fallback
+  return JS_FALLBACK_ENGINE(payload);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EXCEL ENGINE (commented out — uncomment to enable)
+   ─────────────────────────────────────────────────────────────────────────
+   Two integration patterns are shown:
+
+   PATTERN A — Browser-side via SheetJS (user uploads the workbook):
+     The user selects the Excel file; SheetJS reads named ranges / cells.
+     Best for: demos, ad-hoc use without a server.
+
+   PATTERN B — Server-side via Python/xlwings (recommended for production):
+     Your Flask server opens the workbook, writes inputs to named cells,
+     triggers recalculation, reads output cells, and returns JSON.
+     The PYTHON_ENDPOINT already handles this if your server is wired to Excel.
+
+   ── PATTERN A STUB (SheetJS) ──────────────────────────────────────────
+   const EXCEL_FILE_URL = './rates/liberty_rates.xlsx'; // or use a file input
+
+   async function EXCEL_ENGINE(payload) {
+     // Load the workbook (either via URL fetch or FileReader from <input type="file">)
+     const response = await fetch(EXCEL_FILE_URL);
+     const arrayBuffer = await response.arrayBuffer();
+     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+     // Write inputs to named cells
+     // TO CUSTOMISE: change 'Inputs' to your sheet name; 'B2','B3'… to your cell refs
+     const inputSheet = workbook.Sheets['Inputs'];
+     inputSheet['B2'] = { v: payload.age,    t: 'n' };  // Age at entry
+     inputSheet['B3'] = { v: payload.gender, t: 's' };  // Gender
+     inputSheet['B4'] = { v: payload.sa,     t: 'n' };  // Sum assured
+     inputSheet['B5'] = { v: payload.term,   t: 'n' };  // Term (years)
+     // Add more input cells as needed …
+
+     // SheetJS does NOT recalculate formulas — you must read pre-computed output cells
+     // OR use a server-side xlwings approach for live formula evaluation.
+
+     // Read output cells
+     // TO CUSTOMISE: change 'Outputs' to your sheet name; 'C2','C3'… to your cell refs
+     const outSheet = workbook.Sheets['Outputs'];
+     const premium  = outSheet['C2']?.v ?? 0;  // Monthly premium
+     // … read additional benefit cells …
+
+     return {
+       premium,
+       benefits:     [ { risk: 'Death Benefit', coverage: 'KES ' + payload.sa?.toLocaleString(), note: '', highlight: true } ],
+       freeBenefits: [],
+       note: 'Figures read from Excel workbook.',
+       details: [],
+     };
+   }
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ── B3: JavaScript fallback engine (illustrative / offline) ──
+   ─────────────────────────────────────────────────────────────
+   TO UPDATE RATES: Edit the helper functions below.
+   These are simplified illustrative formulae only — replace with
+   your actual rate tables once the Python server is connected.
+   Each helper is clearly labelled.
+   ───────────────────────────────────────────────────────────── */
+function JS_FALLBACK_ENGINE(p) {
+  const freqMult = { monthly:1, quarterly:3, annually:12 }[p.freq] || 1;
+  const freqLabel = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[p.freq];
+
+  /* ── helper: term life mortality loading ──
+     TO REPLACE: swap this formula with a table lookup once you have
+     your company's A/S rates imported into the Python script. */
+  function termMonthlyPrem(age, gender, smoker, sa, term) {
+    let base = sa * 0.0025;
+    base *= 1 + (age - 30) * 0.04;
+    if (gender === 'M') base *= 1.15;
+    if (smoker === 'S') base *= 1.40;
+    return Math.round(base / 12);
+  }
+
+  /* ── helper: whole life loading ── */
+  function wholeLifeMonthlyPrem(age, gender, smoker, sa) {
+    let base = sa * 0.004;
+    base *= 1 + (age - 25) * 0.045;
+    if (gender === 'M') base *= 1.12;
+    if (smoker === 'S') base *= 1.45;
+    return Math.round(base / 12);
+  }
+
+  /* ── helper: endowment (mortality + savings loading) ── */
+  function endowmentMonthlyPrem(age, gender, smoker, sa, term) {
+    const mort = termMonthlyPrem(age, gender, smoker, sa, term);
+    return Math.round(mort + sa / (term * 12 * 1.3));
+  }
+
+  /* ── helper: pension fund projection at 8% p.a. ──
+     TO UPDATE: change the rate r = 0.08 to match your assumed crediting rate */
+  function pensionFund(contrib, age, retireAge) {
+    const r = 0.08, n = (retireAge - age) * 12;
+    return Math.round(contrib * ((Math.pow(1 + r/12, n) - 1) / (r/12)));
+  }
+
+  /* ─── Build result per product ─── */
+  const { product, age, gender, smoker, sa, term, contrib, retireAge, target, freq } = p;
+  let premium = 0, benefits = [], freeBenefits = [], note = '', details = [];
+
+  if (product === 'term') {
+    const mp  = termMonthlyPrem(age, gender, smoker, sa, term);
+    premium   = mp * freqMult;
+    const le  = Math.min(sa * 0.05, 150000);
+    const ci  = sa * 0.5;
+    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Cover Expiry Age',(age+term)+' yrs']];
+    benefits  = [
+      { risk:'Death Benefit',       coverage:'KES '+sa.toLocaleString(),  note:'On death within term', highlight:true  },
+      { risk:'Last Expense Cover',  coverage:'KES '+le.toLocaleString(),  note:'Immediate payout',     highlight:false },
+      { risk:'Critical Illness',    coverage:'KES '+ci.toLocaleString(),  note:'50% of Sum Assured',   highlight:false },
+    ];
+    if (p.partialMat?.enabled && p.partialMat.count > 0) {
+      const slice = Math.round(sa * 0.1);
+      benefits.push({ risk:'Partial Maturity ×'+p.partialMat.count, coverage:'KES '+slice.toLocaleString()+' each', note:'Subject to policy conditions', highlight:false });
+    }
+    freeBenefits = ['Grief counselling support','Funeral service directory access'];
+    note = 'No maturity value. Cover lapses if premiums are not maintained.';
+  }
+
+  else if (product === 'wholelife') {
+    const mp  = wholeLifeMonthlyPrem(age, gender, smoker, sa);
+    premium   = mp * freqMult;
+    const le  = Math.min(sa * 0.08, 200000);
+    const cv5 = Math.round(mp * 12 * 5 * 0.45);
+    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Cover Duration','Whole of Life'],['Indicative Cash Value (5yr)','KES '+cv5.toLocaleString()]];
+    benefits  = [
+      { risk:'Death Benefit',      coverage:'KES '+sa.toLocaleString(), note:'Payable any time',        highlight:true  },
+      { risk:'Last Expense Cover', coverage:'KES '+le.toLocaleString(), note:'Within 48 hrs',           highlight:false },
+      { risk:'Guaranteed Cash Value', coverage:'After year 3',          note:'Partial surrender allowed',highlight:false },
+    ];
+    freeBenefits = ['Medical second opinion service','Annual policy review','Grief counselling'];
+    note = 'Policy acquires cash surrender value after year 3.';
+  }
+
+  else if (product === 'endowment') {
+    const mp  = endowmentMonthlyPrem(age, gender, smoker, sa, term);
+    premium   = mp * freqMult;
+    const mat = Math.round(sa * 1.15);
+    const le  = Math.min(sa * 0.06, 100000);
+    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Maturity Age',(age+term)+' yrs']];
+    benefits  = [
+      { risk:'Death Benefit',   coverage:'KES '+sa.toLocaleString(),  note:'On death before maturity', highlight:false },
+      { risk:'Maturity Benefit',coverage:'KES '+mat.toLocaleString(), note:'Paid at end of term',       highlight:true  },
+      { risk:'Last Expense',    coverage:'KES '+le.toLocaleString(),  note:'Immediate payout',          highlight:false },
+    ];
+    freeBenefits = ['Premium waiver on total disability','Policy loan facility','Paid-up option'];
+    note = 'Maturity benefit includes estimated non-guaranteed additions.';
+  }
+
+  else if (product === 'withprofit') {
+    const mp    = Math.round((sa / (term * 12)) * 1.18);
+    premium     = mp * freqMult;
+    const bonus = Math.round(sa * 0.055 * term);
+    const total = sa + bonus;
+    details = [['Basic Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Projected Bonus Rate','5.5% p.a. (illustrated)']];
+    benefits = [
+      { risk:'Basic Sum Assured',       coverage:'KES '+sa.toLocaleString(),    note:'Guaranteed',                   highlight:false },
+      { risk:'Projected Reversionary Bonus', coverage:'KES '+bonus.toLocaleString(), note:'Non-guaranteed, illust. only', highlight:false },
+      { risk:'Projected Total at Maturity', coverage:'KES '+total.toLocaleString(), note:'Incl. terminal bonus est.',   highlight:true  },
+    ];
+    freeBenefits = ['Annual bonus declaration','Policyholder dividend share','Annual bonus statement'];
+    note = 'Bonus rates are non-guaranteed and depend on fund performance.';
+  }
+
+  else if (product === 'pension') {
+    premium = contrib * freqMult;
+    const yrs = retireAge - age;
+    const fund = pensionFund(contrib, age, retireAge);
+    const ann  = Math.round(fund * 0.006);
+    const db   = Math.round(contrib * 12 * yrs * 0.5);
+    details  = [['Monthly Contribution','KES '+contrib.toLocaleString()],['Retirement Age',retireAge+' yrs'],['Accumulation Period',yrs+' yrs'],['Assumed Growth','8% p.a. (illustrated)']];
+    benefits = [
+      { risk:'Projected Fund at Retirement', coverage:'KES '+fund.toLocaleString(), note:'Illustrated at 8% growth',     highlight:true  },
+      { risk:'Estimated Monthly Annuity',    coverage:'KES '+ann.toLocaleString(),  note:'Illustrative monthly pension',  highlight:true  },
+      { risk:'Death Benefit',                coverage:'KES '+db.toLocaleString(),   note:'Fund value paid to estate',     highlight:false },
+    ];
+    freeBenefits = ['Tax-deductible up to KES 20,000/month','Investment choice (MMF / balanced / equity)','Partial withdrawal after 10 yrs'];
+    note = 'Projections at 8% p.a. Actual returns depend on fund performance.';
+  }
+
+  else if (product === 'education') {
+    premium = Math.round(target / (term * 12 * 1.22)) * freqMult;
+    const m1 = Math.round(target * 0.25), m2 = Math.round(target * 0.35), m3 = Math.round(target * 0.40);
+    details  = [['Target Education Fund','KES '+target.toLocaleString()],['Policy Term',term+' yrs']];
+    benefits = [
+      { risk:'Full Target Fund',     coverage:'KES '+target.toLocaleString(), note:'At maturity',          highlight:true  },
+      { risk:'Milestone 1 (yr '+(Math.floor(term*0.4))+')', coverage:'KES '+m1.toLocaleString(), note:'University entry',  highlight:false },
+      { risk:'Milestone 2 (yr '+(Math.floor(term*0.6))+')', coverage:'KES '+m2.toLocaleString(), note:'Mid-university',    highlight:false },
+      { risk:'Milestone 3 (maturity)', coverage:'KES '+m3.toLocaleString(), note:'Final release',          highlight:false },
+      { risk:'Parent Death Benefit', coverage:'KES '+target.toLocaleString(), note:'Premiums waived + fund secured', highlight:false },
+    ];
+    if (p.partialMat?.enabled && p.partialMat.count > 0) {
+      const slice = Math.round(target * 0.08);
+      benefits.push({ risk:'Partial Maturity ×'+p.partialMat.count, coverage:'KES '+slice.toLocaleString()+' each', note:'Subject to policy conditions', highlight:false });
+    }
+    freeBenefits = ['Premium waiver on parent death/disability','Scholarship advisory service','University placement support'];
+    note = 'Education milestones are structured disbursements from the accumulated fund.';
+  }
+
+  return { premium, benefits, freeBenefits, note, details };
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SECTION C — UI LOGIC
+   ══════════════════════════════════════════════════════════════════════════════
+   All DOM manipulation, navigation, form building, and input handling lives
+   here. This section NEVER performs premium calculations — it only:
+     (a) collects inputs and assembles the payload for Section B, and
+     (b) passes the result from Section B to the renderer in Section D.
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── C1: Application state ── */
+let _selectedProduct = null;
+let _quoteData       = {};   // holds last rendered quote (for email)
+
+/* ── C2: Initialisation ── */
+document.addEventListener('DOMContentLoaded', () => {
+  UI_buildProductGrid();
+});
+
+/* Render product selection cards from the PRODUCT_CATALOGUE */
+function UI_buildProductGrid() {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = Object.entries(PRODUCT_CATALOGUE).map(([key, cfg]) => `
+    <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
+      <div class="product-check">✓</div>
+      <span class="product-icon">${cfg.icon}</span>
+      <div class="product-name">${cfg.label}</div>
+      <div class="product-desc">${cfg.desc}</div>
+    </div>`).join('');
+}
+
+/* ── C3: Navigation ── */
+function UI_selectProduct(card) {
+  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  _selectedProduct = card.dataset.product;
+  document.getElementById('btn-next-1').disabled = false;
+}
+
+function UI_goToStep1() { _setScreen(1); }
+
+function UI_goToStep2() {
+  if (!_selectedProduct) return;
+  _buildProductFields(_selectedProduct);
+  document.getElementById('form-title').textContent =
+    PRODUCT_CATALOGUE[_selectedProduct].label + ' — Your Details';
+  _setScreen(2);
+}
+
+function UI_startOver() {
+  _selectedProduct = null;
+  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-next-1').disabled = true;
+  _setScreen(1);
+}
+
+function _setScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  ['pill-1','pill-2','pill-3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i+1 === n) el.classList.add('active');
+    else if (i+1 < n) el.classList.add('done');
+  });
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ── C4: Form builder ── */
+function _buildProductFields(product) {
+  const cfg       = PRODUCT_CATALOGUE[product];
+  const container = document.getElementById('product-fields');
+
+  /* Render product-specific field templates */
+  let html = `<div class="subsection-label">Product Details</div>
+    <div class="form-grid">`;
+  cfg.fields.forEach(fid => { html += FIELD_TEMPLATES[fid] || ''; });
+  html += `</div>`;
+
+  /* Partial Maturities toggle (term life and education only) */
+  if (cfg.hasPartialMat) {
+    html += `
+    <div class="toggle-row" onclick="UI_toggleSection('partial-mat-content','partial-mat-switch')">
+      <div>
+        <div class="toggle-label">Partial Maturities</div>
+        <div class="toggle-sub">Allow partial payouts before full maturity</div>
+      </div>
+      <div class="toggle-switch" id="partial-mat-switch"></div>
+    </div>
+    <div class="toggle-content" id="partial-mat-content">
+      <div class="toggle-section-title">Partial Maturity Configuration</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Number of Partial Maturities</label>
+          <input type="number" id="f-partial-count" min="1" max="10" step="1" placeholder="e.g. 3" />
+          <span class="hint">Each payout typically equals a set % of the sum assured</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* Joint Life toggle (term, whole life, education) */
+  if (cfg.hasJointLife) {
+    html += `
+    <div class="toggle-row" onclick="UI_toggleSection('joint-life-content','joint-life-switch')">
+      <div>
+        <div class="toggle-label">Joint Life Cover</div>
+        <div class="toggle-sub">Add a second life to this policy</div>
+      </div>
+      <div class="toggle-switch" id="joint-life-switch"></div>
+    </div>
+    <div class="toggle-content" id="joint-life-content">
+      <div class="toggle-section-title">Second Life — Personal Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="f-jl-name" placeholder="e.g. Kendi Ochieng" />
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" id="f-jl-dob" />
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="f-jl-gender">
+            <option value="">— select —</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="f-jl-email" placeholder="e.g. kendi@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="f-jl-phone" placeholder="e.g. +254 7XX XXX XXX" />
+        </div>
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+/* ── C5: Toggle helper ── */
+function UI_toggleSection(contentId, switchId) {
+  const content  = document.getElementById(contentId);
+  const sw       = document.getElementById(switchId);
+  if (!content || !sw) return;
+  const isOpen = content.classList.contains('open');
+  content.classList.toggle('open', !isOpen);
+  sw.classList.toggle('on', !isOpen);
+}
+
+/* ── C6: Currency input formatter ── */
+function UI_formatCurrencyInput(input) {
+  /* Only allow non-negative numbers; strip non-numeric chars */
+  let raw = input.value.replace(/[^0-9]/g, '');
+  input.value = raw ? parseInt(raw, 10) : '';
+}
+
+/* ── C7: Collect inputs and call the engine ── */
+async function UI_submitForQuote() {
+  /* Validate common fields */
+  const firstname  = document.getElementById('f-firstname').value.trim();
+  const lastname   = document.getElementById('f-lastname').value.trim();
+  const dob        = document.getElementById('f-dob').value;
+  const gender     = document.getElementById('f-gender').value;
+  const email      = document.getElementById('f-email').value.trim();
+  const smoker     = document.getElementById('f-smoker').value;
+  const occupation = document.getElementById('f-occupation').value.trim();
+  const employer   = document.getElementById('f-employer').value.trim();
+  const phone      = document.getElementById('f-phone').value.trim();
+  const idno       = document.getElementById('f-idno').value.trim();
+  const freq       = document.getElementById('f-freq').value;
+
+  if (!firstname || !lastname || !dob || !gender || !email || !occupation) {
+    showToast('⚠️ Please fill in all required fields (marked with *).');
+    return;
+  }
+  const age = _calcAge(dob);
+  if (age < 18 || age > 70) {
+    showToast('⚠️ Entry age must be between 18 and 70 years.');
+    return;
+  }
+
+  /* Collect product-specific fields */
+  const cfg         = PRODUCT_CATALOGUE[_selectedProduct];
+  const sa          = _safeNum('f-sa');
+  const term        = _safeNum('f-term');
+  const contrib     = _safeNum('f-contrib');
+  const retireAge   = _safeNum('f-retire');
+  const target      = _safeNum('f-target');
+  const childName   = document.getElementById('f-childname')?.value.trim() || '';
+  const childDob    = document.getElementById('f-childdob')?.value || '';
+
+  /* Partial maturities */
+  const partialEnabled = document.getElementById('partial-mat-content')?.classList.contains('open') || false;
+  const partialCount   = _safeNum('f-partial-count') || 0;
+  const partialMat     = { enabled: partialEnabled, count: partialCount };
+
+  /* Joint life */
+  const jlEnabled  = document.getElementById('joint-life-content')?.classList.contains('open') || false;
+  const jointLife  = {
+    enabled: jlEnabled,
+    name:    document.getElementById('f-jl-name')?.value.trim()   || '',
+    dob:     document.getElementById('f-jl-dob')?.value           || '',
+    gender:  document.getElementById('f-jl-gender')?.value        || '',
+    email:   document.getElementById('f-jl-email')?.value.trim()  || '',
+    phone:   document.getElementById('f-jl-phone')?.value.trim()  || '',
+  };
+  if (jlEnabled && jointLife.dob) {
+    jointLife.age = _calcAge(jointLife.dob);
+  }
+
+  /* Assemble payload for the calculation engine */
+  const payload = {
+    product: _selectedProduct,
+    age, gender, smoker, freq,
+    sa:         sa         || null,
+    term:       term       || null,
+    contrib:    contrib    || null,
+    retireAge:  retireAge  || null,
+    target:     target     || null,
+    childName, childDob,
+    partialMat, jointLife,
+  };
+
+  /* Show loading state and call engine (Section B) */
+  document.getElementById('loading-overlay').classList.add('show');
+  let result;
+  try {
+    result = await CALC_getQuote(payload);
+  } finally {
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+
+  /* Hand off to renderer (Section D) */
+  const ref    = _makeRef();
+  const today  = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
+  const person = { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno };
+
+  document.getElementById('quote-container').innerHTML =
+    RENDER_quoteHTML({ ref, today, product: _selectedProduct, person, freq, result, jointLife, partialMat });
+
+  _quoteData = {
+    ref, today, person, product: _selectedProduct, freq, result, jointLife, partialMat,
+    emailBody: _buildEmailBody({ ref, today, person, product: _selectedProduct, freq, result, jointLife, partialMat }),
+  };
+  _setScreen(3);
+}
+
+/* ── C8: Small helpers ── */
+function _safeNum(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+function _calcAge(dob) {
+  const today = new Date(), bd = new Date(dob);
+  let age = today.getFullYear() - bd.getFullYear();
+  const m = today.getMonth() - bd.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+  return age;
+}
+function _makeRef() { return 'LIQ-' + Date.now().toString(36).toUpperCase().slice(-7); }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SECTION D — QUOTE RENDERER
+   ══════════════════════════════════════════════════════════════════════════════
+   Takes the result object from Section B and produces the HTML summary card.
+   No calculations here — only display logic.
+══════════════════════════════════════════════════════════════════════════════ */
+function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife, partialMat }) {
+  const { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno } = person;
+  const { premium, benefits, freeBenefits, note, details } = result;
+  const cfg        = PRODUCT_CATALOGUE[product];
+  const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
+  const gLabel     = { M:'Male', F:'Female' }[gender] || gender;
+  const sLabel     = smoker === 'S' ? 'Smoker' : 'Non-Smoker';
+
+  const detailRows = (details || []).map(([l,v]) =>
+    `<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`
+  ).join('');
+
+  const benefitCards = benefits.map(b => `
+    <div class="benefit-card">
+      <div class="bc-label">${b.risk}</div>
+      <div class="bc-val ${b.highlight ? 'highlight' : ''}">${b.coverage}</div>
+      <div class="bc-note">${b.note || ''}</div>
+    </div>`).join('');
+
+  const freeBadges = (freeBenefits || []).map(f =>
+    `<span class="free-benefit-badge">✓ ${f}</span>`).join('');
+
+  /* Joint life summary row */
+  const jlRow = (jointLife?.enabled && jointLife.name) ? `
+    <div class="info-row" style="background:#f0f5fa;padding:6px 10px;border-radius:3px;margin-top:6px;">
+      <span class="info-label">Joint Life</span>
+      <span class="info-val">${jointLife.name}${jointLife.age ? ' · Age '+jointLife.age : ''}${jointLife.gender ? ' · '+({ M:'M', F:'F' }[jointLife.gender]||'') : ''}</span>
+    </div>` : '';
+
+  /* Partial maturity summary row */
+  const pmRow = (partialMat?.enabled && partialMat.count > 0) ? `
+    <div class="info-row">
+      <span class="info-label">Partial Maturities</span>
+      <span class="info-val">${partialMat.count} instalments</span>
+    </div>` : '';
+
+  return `
+  <div class="quote-header">
+    <div>
+      <div class="qh-label">Official Quote — Illustrative</div>
+      <div class="qh-product">${cfg.label}</div>
+      <div class="qh-sub">Prepared for ${firstname} ${lastname} &middot; ${today}</div>
+    </div>
+    <div class="quote-ref">
+      <span>Quote Reference</span>
+      <strong>${ref}</strong>
+      <div style="margin-top:5px;font-size:0.62rem;color:#556677;">Valid for 30 days</div>
+    </div>
+  </div>
+  <div class="quote-body">
+
+    <div class="quote-section">
+      <div class="qs-title">Policyholder Details</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">${firstname} ${lastname}</span></div>
+        <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-val">${new Date(dob).toLocaleDateString('en-GB')}</span></div>
+        <div class="info-row"><span class="info-label">Age at Entry</span><span class="info-val">${age} yrs</span></div>
+        <div class="info-row"><span class="info-label">Gender</span><span class="info-val">${gLabel}</span></div>
+        <div class="info-row"><span class="info-label">Smoker Status</span><span class="info-val">${sLabel}</span></div>
+        <div class="info-row"><span class="info-label">Occupation</span><span class="info-val">${occupation}</span></div>
+        ${employer ? `<div class="info-row"><span class="info-label">Employer</span><span class="info-val">${employer}</span></div>` : ''}
+        <div class="info-row"><span class="info-label">Email</span><span class="info-val" style="font-size:0.72rem">${email}</span></div>
+        <div class="info-row"><span class="info-label">Phone</span><span class="info-val">${phone || '—'}</span></div>
+        <div class="info-row"><span class="info-label">ID / Passport</span><span class="info-val">${idno || '—'}</span></div>
+        ${jlRow}
+      </div>
+    </div>
+
+    <div class="quote-section">
+      <div class="qs-title">Policy Parameters</div>
+      ${detailRows}
+      ${pmRow}
+    </div>
+
+    <div class="quote-section">
+      <div class="premium-highlight">
+        <div>
+          <div class="ph-label">${freqLabel} Premium</div>
+          <div class="ph-freq">${freqLabel} payment &middot; auto-debit available</div>
+        </div>
+        <div class="ph-val">KES ${premium.toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div class="quote-section">
+      <div class="qs-title">Key Benefits (Risk — Coverage)</div>
+      <div class="benefit-grid">${benefitCards}</div>
+    </div>
+
+    ${freeBadges ? `
+    <div class="quote-section">
+      <div class="qs-title">Complimentary Benefits</div>
+      <div style="margin-top:4px">${freeBadges}</div>
+    </div>` : ''}
+
+    <div class="quote-section">
+      <div class="qs-title">Important Notes</div>
+      <div class="disclaimer">
+        ⚠️ ${note || ''} All figures are illustrative estimates for discussion only and do not constitute a binding offer.
+        Final premiums and benefits are subject to full underwriting and acceptance.
+        Occupation class will be assigned during underwriting.
+        This quote is valid for 30 days from issue. Ref: <strong>${ref}</strong>.
+      </div>
+    </div>
+
+  </div>`;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SECTION E — OUTPUT / EMAIL
+══════════════════════════════════════════════════════════════════════════════ */
+
+/* Build plain-text email body */
+function _buildEmailBody({ ref, today, person, product, freq, result, jointLife, partialMat }) {
+  const { firstname, lastname, email, phone, idno, age, gender, smoker, occupation, employer } = person;
+  const cfg        = PRODUCT_CATALOGUE[product];
+  const { premium, benefits } = result;
+  const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
+  const benefitLines = benefits.map(b => `  • ${b.risk}: ${b.coverage}`).join('\n');
+  const jlSection = (jointLife?.enabled && jointLife.name) ? `\nJOINT LIFE
+  Name:   ${jointLife.name}
+  DOB:    ${jointLife.dob || '—'}
+  Gender: ${jointLife.gender || '—'}
+  Email:  ${jointLife.email || '—'}
+  Phone:  ${jointLife.phone || '—'}\n` : '';
+  const pmSection = (partialMat?.enabled && partialMat.count > 0) ?
+    `\n  Partial Maturities requested: ${partialMat.count} instalments\n` : '';
+
+  return `Dear Sales Team,
+
+A new quote has been generated via the Liberty Life portal and requires processing.
+
+═══════════════════════════════════════
+QUOTE REFERENCE: ${ref}
+DATE:            ${today}
+PRODUCT:         ${cfg.label}
+═══════════════════════════════════════
+
+MAIN LIFE
+  Full Name:     ${firstname} ${lastname}
+  Email:         ${email}
+  Phone:         ${phone || 'Not provided'}
+  ID/Passport:   ${idno || 'Not provided'}
+  Age at Entry:  ${age} years
+  Gender:        ${gender === 'M' ? 'Male' : 'Female'}
+  Smoker:        ${smoker === 'S' ? 'Smoker' : 'Non-Smoker'}
+  Occupation:    ${occupation} (class to be assigned at underwriting)
+  Employer:      ${employer || 'Not provided'}
+${jlSection}
+PREMIUM: KES ${premium.toLocaleString()} (${freqLabel})
+${pmSection}
+KEY BENEFITS
+${benefitLines}
+
+═══════════════════════════════════════
+ACTION REQUIRED
+  1. Assign occupation class based on occupation: "${occupation}"
+  2. Conduct full underwriting review
+  3. Contact client to confirm documentation
+  4. Process application if all requirements are met
+
+Client has received a copy of this quote.
+═══════════════════════════════════════
+Auto-generated by Liberty Life Portal · Do not reply directly.`;
+}
+
+/* ── Send to sales via mailto ── */
+function UI_sendToSales() {
+  const { emailBody, ref, person } = _quoteData;
+  if (!emailBody) return;
+  const to      = 'sales@libertyke.co.ke';
+  const subject = encodeURIComponent(`Liberty Life Application — Ref: ${ref} — ${person.email}`);
+  const body    = encodeURIComponent(emailBody);
+  window.location.href = `mailto:${to}?cc=${encodeURIComponent(person.email)}&subject=${subject}&body=${body}`;
+  showToast('✉️ Email client opened. Ready to send to sales!');
+}
+
+/* ── Toast notification ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3400);
+}
+</script>
+</body>
+</html>
