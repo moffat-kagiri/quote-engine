@@ -453,12 +453,12 @@ input:focus, select:focus, textarea:focus {
    and which optional toggles are available.
 
    TO ADD A NEW PRODUCT:
-     1. Add a key to PRODUCT_CATALOGUE with the fields below.
-     2. Add any new field templates to FIELD_TEMPLATES if needed.
-     3. No other changes required — the UI and engine pick it up automatically.
+     1. Maintain product definitions in backend/productspecs.py.
+     2. Frontend pulls product display and limits from /productspecs.
+     3. FIELD_TEMPLATES handles visual field markup only.
 
    TO EDIT AN EXISTING PRODUCT (e.g. change the term range):
-     Modify the relevant entry in PRODUCT_CATALOGUE.fields or FIELD_TEMPLATES.
+     Modify backend/productspecs.py, then reload the frontend.
 
    FIELDS REFERENCE:
      fields[]         — array of field IDs rendered in the product-specific section.
@@ -466,56 +466,35 @@ input:focus, select:focus, textarea:focus {
      hasPartialMat    — show the "Partial Maturities" toggle (term life, education)
      hasJointLife     — show the "Joint Life" toggle (term, wholelife, education)
 ══════════════════════════════════════════════════════════════════════════════ */
-const PRODUCT_CATALOGUE = {
-  term: {
-    label:         'Term Life Assurance',
-    icon:          '🛡️',
-    desc:          'Pure protection cover for a fixed term. Pays sum assured on death within the term.',
-    fields:        ['sum-assured', 'term'],
-    hasPartialMat: true,
-    hasJointLife:  true,
-  },
-  wholelife: {
-    label:         'Whole Life Assurance',
-    icon:          '♾️',
-    desc:          'Lifetime cover with guaranteed payout and optional savings element.',
-    fields:        ['sum-assured'],
-    hasPartialMat: false,
-    hasJointLife:  true,
-  },
-  endowment: {
-    label:         'Endowment / Savings',
-    icon:          '💰',
-    desc:          'Protection + disciplined savings. Pays out on maturity or earlier death.',
-    fields:        ['sum-assured', 'term'],
-    hasPartialMat: false,
-    hasJointLife:  false,
-  },
-  withprofit: {
-    label:         'With-Profit Policy',
-    icon:          '📈',
-    desc:          'Bonuses (reversionary & terminal) added to sum assured over the policy term.',
-    fields:        ['sum-assured', 'term'],
-    hasPartialMat: false,
-    hasJointLife:  false,
-  },
-  pension: {
-    label:         'Individual Pension',
-    icon:          '🧓',
-    desc:          'Systematic retirement savings with annuity payout at a selected retirement age.',
-    fields:        ['contribution', 'retirement-age'],
-    hasPartialMat: false,
-    hasJointLife:  false,
-  },
-  education: {
-    label:         'Education Policy',
-    icon:          '🎓',
-    desc:          'Saves for education funds at defined milestones for your child.',
-    fields:        ['target-amount', 'term', 'child-name', 'child-dob'],
-    hasPartialMat: true,
-    hasJointLife:  true,
-  },
+const PRODUCT_SPECS_ENDPOINT = "http://localhost:5050/productspecs";
+const PRODUCT_ICON_BY_CATEGORY = {
+  protection:            'Protection',
+  protection_with_value: 'Whole Life',
+  savings:               'Savings',
+  participating:         'With Profit',
+  retirement:            'Retirement',
+  goal_savings:          'Education',
 };
+const SPEC_TO_TEMPLATE_FIELD = {
+  sa:        'sum-assured',
+  term:      'term',
+  escalationRate: 'escalation-rate',
+  contrib:   'contribution',
+  retireAge: 'retirement-age',
+  target:    'target-amount',
+  childName: 'child-name',
+  childDob:  'child-dob',
+};
+const SPEC_TO_INPUT_ID = {
+  age:       'f-dob',
+  sa:        'f-sa',
+  term:      'f-term',
+  escalationRate: 'f-escalation',
+  contrib:   'f-contrib',
+  retireAge: 'f-retire',
+  target:    'f-target',
+};
+let _specData = { brands: {}, fields: {}, products: {} };
 
 /*
    FIELD TEMPLATES — HTML snippets for each reusable form field.
@@ -543,6 +522,14 @@ const FIELD_TEMPLATES = {
       <label>Policy Term (Years) <span style="color:#c0392b">*</span></label>
       <input type="number" id="f-term" min="5" max="35" step="1" placeholder="e.g. 15" />
       <span class="hint">Between 5 and 35 years</span>
+    </div>`,
+
+  /* Annual sum assured escalation rate */
+  'escalation-rate': `
+    <div class="form-group">
+      <label>Escalation Rate (% p.a.) <span style="color:#c0392b">*</span></label>
+      <input type="number" id="f-escalation" min="0" max="20" step="0.5" placeholder="e.g. 5" />
+      <span class="hint">Compounding annual increase in sum assured</span>
     </div>`,
 
   /* Monthly pension contribution */
@@ -635,7 +622,7 @@ const FIELD_TEMPLATES = {
      parse a locally-loaded .xlsx file.
      See the commented block EXCEL_ENGINE below.
 
-   OPTION 3 — Pure JS fallback (for offline/demo use)
+   OPTION 3 — Python fallback endpoint (for offline/demo use)
      The Python fallback endpoint below runs if the primary Python endpoint is unreachable.
      It uses simplified illustrative rates. Clearly labelled as illustrative.
 ══════════════════════════════════════════════════════════════════════════════ */
@@ -670,6 +657,7 @@ const PYTHON_FALLBACK_ENDPOINT = "http://localhost:5050/quote/fallback";
  *   smoker:             "S"|"NS"
  *   term:               number|null  years (null for whole-life / pension)
  *   sa:                 number|null  sum assured in KES
+ *   escalationRate:     number|null  annual sum assured escalation (%)
  *   contribution:       number|null  monthly contribution (pension)
  *   target:             number|null  target fund (education)
  *   retireAge:          number|null  target retirement age (pension)
@@ -687,6 +675,24 @@ const PYTHON_FALLBACK_ENDPOINT = "http://localhost:5050/quote/fallback";
  *   details:            Array<[label, value]>  (policy parameters for the summary)
  * }
  */
+async function _parseQuoteResponse(resp, endpointLabel) {
+  if (resp.ok) return await resp.json();
+
+  let errPayload = {};
+  try {
+    errPayload = await resp.json();
+  } catch (_ignored) {
+    errPayload = {};
+  }
+
+  const msg = errPayload.error || (endpointLabel + ' responded ' + resp.status);
+  const err = new Error(msg);
+  err.status = resp.status;
+  err.validationMessages = Array.isArray(errPayload.messages) ? errPayload.messages : [];
+  err.isValidationError = resp.status === 400;
+  throw err;
+}
+
 async function CALC_getQuote(payload) {
   if (USE_PYTHON_ENGINE) {
     try {
@@ -694,18 +700,17 @@ async function CALC_getQuote(payload) {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
-        signal:  AbortSignal.timeout(12000), // 12-second timeout
+        signal:  AbortSignal.timeout(12000),
       });
-      if (!resp.ok) throw new Error('Server responded ' + resp.status);
-      return await resp.json();
+      return await _parseQuoteResponse(resp, 'Primary server');
     } catch (err) {
+      if (err.isValidationError) throw err;
       console.warn('[QuoteEngine] Primary Python endpoint unreachable; trying Python fallback.', err.message);
       showToast('Primary engine unavailable - using Python fallback estimates');
       return CALC_getPythonFallbackQuote(payload);
     }
   }
 
-  // USE_PYTHON_ENGINE = false -> always use Python fallback endpoint
   return CALC_getPythonFallbackQuote(payload);
 }
 
@@ -717,11 +722,9 @@ async function CALC_getPythonFallbackQuote(payload) {
     signal:  AbortSignal.timeout(12000),
   });
 
-  if (!resp.ok) {
-    throw new Error('Fallback server responded ' + resp.status + '. Ensure quote_server.py is running.');
-  }
-  return await resp.json();
+  return _parseQuoteResponse(resp, 'Fallback server');
 }
+
 
 /* ─────────────────────────────────────────────────────────────────────────
    EXCEL ENGINE (commented out — uncomment to enable)
@@ -790,41 +793,92 @@ async function CALC_getPythonFallbackQuote(payload) {
 ══════════════════════════════════════════════════════════════════════════════ */
 
 /* ── C1: Application state ── */
+/* C1: Application state */
 let _selectedProduct = null;
-let _quoteData       = {};   // holds last rendered quote (for email)
+let _quoteData       = {};
 
-/* ── C2: Initialisation ── */
-document.addEventListener('DOMContentLoaded', () => {
+/* C2: Initialisation */
+document.addEventListener('DOMContentLoaded', async () => {
+  await UI_loadProductSpecs();
   UI_buildProductGrid();
+  UI_wireCommonValidation();
 });
 
-/* Render product selection cards from the PRODUCT_CATALOGUE */
-function UI_buildProductGrid() {
-  const grid = document.getElementById('product-grid');
-  grid.innerHTML = Object.entries(PRODUCT_CATALOGUE).map(([key, cfg]) => `
-    <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
-      <div class="product-check">✓</div>
-      <span class="product-icon">${cfg.icon}</span>
-      <div class="product-name">${cfg.label}</div>
-      <div class="product-desc">${cfg.desc}</div>
-    </div>`).join('');
+async function UI_loadProductSpecs() {
+  try {
+    const resp = await fetch(PRODUCT_SPECS_ENDPOINT, { signal: AbortSignal.timeout(12000) });
+    if (!resp.ok) throw new Error('Productspec server responded ' + resp.status);
+    const data = await resp.json();
+    if (!data || !data.products || Object.keys(data.products).length === 0) {
+      throw new Error('No productspec data returned.');
+    }
+    _specData = data;
+  } catch (err) {
+    console.error('[Productspecs]', err.message);
+    showToast('Unable to load product specifications from backend. Start quote_server.py.');
+    _specData = { brands: {}, fields: {}, products: {} };
+  }
 }
 
-/* ── C3: Navigation ── */
+function _getProductSpec(product) {
+  return _specData.products?.[product] || null;
+}
+
+function _getProductView(product) {
+  const spec = _getProductSpec(product) || {};
+  return {
+    label: spec.display_name || product,
+    desc:  spec.description || '',
+    icon:  PRODUCT_ICON_BY_CATEGORY[spec.category] || 'Product',
+  };
+}
+
+function _getProductTemplateFields(spec) {
+  const orderedSpecFields = ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target', 'childName', 'childDob'];
+  const allFields = new Set([...(spec.required_fields || []), ...(spec.optional_fields || [])]);
+  return orderedSpecFields
+    .filter(field => allFields.has(field))
+    .map(field => SPEC_TO_TEMPLATE_FIELD[field])
+    .filter(Boolean);
+}
+
+function UI_buildProductGrid() {
+  const grid = document.getElementById('product-grid');
+  const products = Object.entries(_specData.products || {});
+
+  if (!products.length) {
+    grid.innerHTML = '<div class="section-sub">No products available. Check backend /productspecs endpoint.</div>';
+    return;
+  }
+
+  grid.innerHTML = products.map(([key, spec]) => {
+    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || 'Product';
+    return `
+      <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
+        <div class="product-check">v</div>
+        <span class="product-icon">${icon}</span>
+        <div class="product-name">${spec.display_name}</div>
+        <div class="product-desc">${spec.description || ''}</div>
+      </div>`;
+  }).join('');
+}
+
+/* C3: Navigation */
 function UI_selectProduct(card) {
   document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
   _selectedProduct = card.dataset.product;
   document.getElementById('btn-next-1').disabled = false;
+  _clearFieldError('f-dob');
 }
 
 function UI_goToStep1() { _setScreen(1); }
 
 function UI_goToStep2() {
   if (!_selectedProduct) return;
+  const view = _getProductView(_selectedProduct);
   _buildProductFields(_selectedProduct);
-  document.getElementById('form-title').textContent =
-    PRODUCT_CATALOGUE[_selectedProduct].label + ' — Your Details';
+  document.getElementById('form-title').textContent = view.label + ' - Your Details';
   _setScreen(2);
 }
 
@@ -847,19 +901,22 @@ function _setScreen(n) {
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
-/* ── C4: Form builder ── */
+/* C4: Form builder */
 function _buildProductFields(product) {
-  const cfg       = PRODUCT_CATALOGUE[product];
+  const spec      = _getProductSpec(product);
   const container = document.getElementById('product-fields');
+  if (!spec) {
+    container.innerHTML = '<div class="section-sub">Unable to load product specification.</div>';
+    return;
+  }
 
-  /* Render product-specific field templates */
-  let html = `<div class="subsection-label">Product Details</div>
-    <div class="form-grid">`;
-  cfg.fields.forEach(fid => { html += FIELD_TEMPLATES[fid] || ''; });
+  const templateFields = _getProductTemplateFields(spec);
+
+  let html = `<div class="subsection-label">Product Details</div><div class="form-grid">`;
+  templateFields.forEach(fid => { html += FIELD_TEMPLATES[fid] || ''; });
   html += `</div>`;
 
-  /* Partial Maturities toggle (term life and education only) */
-  if (cfg.hasPartialMat) {
+  if ((spec.optional_fields || []).includes('partialMat.enabled')) {
     html += `
     <div class="toggle-row" onclick="UI_toggleSection('partial-mat-content','partial-mat-switch')">
       <div>
@@ -880,8 +937,7 @@ function _buildProductFields(product) {
     </div>`;
   }
 
-  /* Joint Life toggle (term, whole life, education) */
-  if (cfg.hasJointLife) {
+  if ((spec.optional_fields || []).includes('jointLife.enabled')) {
     html += `
     <div class="toggle-row" onclick="UI_toggleSection('joint-life-content','joint-life-switch')">
       <div>
@@ -891,7 +947,7 @@ function _buildProductFields(product) {
       <div class="toggle-switch" id="joint-life-switch"></div>
     </div>
     <div class="toggle-content" id="joint-life-content">
-      <div class="toggle-section-title">Second Life — Personal Details</div>
+      <div class="toggle-section-title">Second Life - Personal Details</div>
       <div class="form-grid">
         <div class="form-group">
           <label>Full Name</label>
@@ -904,7 +960,7 @@ function _buildProductFields(product) {
         <div class="form-group">
           <label>Gender</label>
           <select id="f-jl-gender">
-            <option value="">— select —</option>
+            <option value="">-- select --</option>
             <option value="M">Male</option>
             <option value="F">Female</option>
           </select>
@@ -922,9 +978,11 @@ function _buildProductFields(product) {
   }
 
   container.innerHTML = html;
+  _applyProductConstraints(spec);
+  UI_wireProductValidation(spec);
 }
 
-/* ── C5: Toggle helper ── */
+/* C5: Toggle helper */
 function UI_toggleSection(contentId, switchId) {
   const content  = document.getElementById(contentId);
   const sw       = document.getElementById(switchId);
@@ -934,16 +992,271 @@ function UI_toggleSection(contentId, switchId) {
   sw.classList.toggle('on', !isOpen);
 }
 
-/* ── C6: Currency input formatter ── */
+/* C6: Currency input formatter */
 function UI_formatCurrencyInput(input) {
-  /* Only allow non-negative numbers; strip non-numeric chars */
   let raw = input.value.replace(/[^0-9]/g, '');
   input.value = raw ? parseInt(raw, 10) : '';
 }
 
-/* ── C7: Collect inputs and call the engine ── */
+function UI_wireCommonValidation() {
+  const dobInput = document.getElementById('f-dob');
+  if (dobInput) {
+    ['input', 'change', 'blur'].forEach(evt => {
+      dobInput.addEventListener(evt, () => _validateAgeField(_getProductSpec(_selectedProduct), false));
+    });
+  }
+}
+
+function UI_wireProductValidation(spec) {
+  ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target'].forEach(field => {
+    const id = SPEC_TO_INPUT_ID[field];
+    const input = document.getElementById(id);
+    if (!input) return;
+    ['input', 'change', 'blur'].forEach(evt => {
+      input.addEventListener(evt, () => _validateNumericField(field, spec, false));
+    });
+  });
+}
+
+function _applyProductConstraints(spec) {
+  if (!spec) return;
+
+  const ageRange = spec.allowed_entry_age || [18, 70];
+  const dobInput = document.getElementById('f-dob');
+  if (dobInput) {
+    const [minAge, maxAge] = ageRange;
+    const bounds = _getDobBounds(minAge, maxAge);
+    dobInput.min = bounds.minDate;
+    dobInput.max = bounds.maxDate;
+    dobInput.dataset.minAge = String(minAge);
+    dobInput.dataset.maxAge = String(maxAge);
+  }
+
+  const termInput = document.getElementById('f-term');
+  if (termInput) {
+    const termRange = spec.allowed_term_years || [_fieldMin('term'), _fieldMax('term')];
+    if (termRange[0] != null) termInput.min = termRange[0];
+    if (termRange[1] != null) termInput.max = termRange[1];
+  }
+
+  _applyFinancialLimit('sa', 'f-sa', spec);
+  _applyFinancialLimit('escalationRate', 'f-escalation', spec);
+  _applyFinancialLimit('target', 'f-target', spec);
+  _applyFinancialLimit('contrib', 'f-contrib', spec);
+
+  const retireInput = document.getElementById('f-retire');
+  if (retireInput) {
+    const min = _fieldMin('retireAge');
+    const max = _fieldMax('retireAge');
+    if (min != null) retireInput.min = min;
+    if (max != null) retireInput.max = max;
+  }
+}
+
+function _fieldMin(field) {
+  return _specData.fields?.[field]?.minimum ?? null;
+}
+
+function _fieldMax(field) {
+  return _specData.fields?.[field]?.maximum ?? null;
+}
+
+function _applyFinancialLimit(field, inputId, spec) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const financial = spec.financial_limits?.[field] || [null, null];
+  const min = financial[0] != null ? financial[0] : _fieldMin(field);
+  const max = financial[1] != null ? financial[1] : _fieldMax(field);
+  if (min != null) input.min = min;
+  if (max != null) input.max = max;
+}
+
+function _getDobBounds(minAge, maxAge) {
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+  const minDate = new Date(today.getFullYear() - maxAge, today.getMonth(), today.getDate());
+  return { minDate: _toYMD(minDate), maxDate: _toYMD(maxDate) };
+}
+
+function _toYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function _setFieldError(inputId, message) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const group = input.closest('.form-group') || input.parentElement;
+  if (!group) return;
+
+  let el = group.querySelector(`.field-error[data-for="${inputId}"]`);
+  if (!message) {
+    if (el) el.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement('span');
+    el.className = 'hint field-error';
+    el.dataset.for = inputId;
+    el.style.color = '#c0392b';
+    group.appendChild(el);
+  }
+  el.textContent = message;
+}
+
+function _clearFieldError(inputId) {
+  _setFieldError(inputId, '');
+}
+
+function _validateAgeField(spec, silent) {
+  const dob = document.getElementById('f-dob')?.value;
+  if (!dob) return true;
+  if (!spec) return true;
+
+  const age = _calcAge(dob);
+  const [minAge, maxAge] = spec.allowed_entry_age || [18, 70];
+  if (age < minAge || age > maxAge) {
+    const msg = `Entry age must be between ${minAge} and ${maxAge} for this product.`;
+    if (!silent) _setFieldError('f-dob', msg);
+    return false;
+  }
+  _clearFieldError('f-dob');
+  return true;
+}
+
+function _validateNumericField(field, spec, silent) {
+  const inputId = SPEC_TO_INPUT_ID[field];
+  const input = document.getElementById(inputId);
+  if (!input || !spec) return true;
+
+  const required = (spec.required_fields || []).includes(field);
+  const value = _safeNum(inputId);
+  if (required && (value == null)) {
+    const msg = `This field is required.`;
+    if (!silent) _setFieldError(inputId, msg);
+    return false;
+  }
+  if (value == null) {
+    _clearFieldError(inputId);
+    return true;
+  }
+
+  let min = null;
+  let max = null;
+
+  if (field === 'term' && spec.allowed_term_years) {
+    min = spec.allowed_term_years[0];
+    max = spec.allowed_term_years[1];
+  } else if (spec.financial_limits?.[field]) {
+    min = spec.financial_limits[field][0];
+    max = spec.financial_limits[field][1];
+  } else {
+    min = _fieldMin(field);
+    max = _fieldMax(field);
+  }
+
+  if (min != null && value < min) {
+    if (!silent) _setFieldError(inputId, `Minimum allowed is ${min}.`);
+    return false;
+  }
+  if (max != null && value > max) {
+    if (!silent) _setFieldError(inputId, `Maximum allowed is ${max}.`);
+    return false;
+  }
+
+  _clearFieldError(inputId);
+  return true;
+}
+
+function UI_applyBackendValidationMessages(messages) {
+  messages.forEach(msg => {
+    const requiredMatch = msg.match(/^Missing required field:\s*(.+)$/);
+    if (requiredMatch) {
+      const field = requiredMatch[1].trim();
+      const inputId = SPEC_TO_INPUT_ID[field];
+      if (inputId) _setFieldError(inputId, 'This field is required.');
+      return;
+    }
+
+    if (msg.toLowerCase().includes('entry age must be between')) {
+      _setFieldError('f-dob', msg);
+      return;
+    }
+    if (msg.toLowerCase().startsWith('term must be between')) {
+      _setFieldError('f-term', msg);
+      return;
+    }
+    if (msg.toLowerCase().startsWith('sa must')) {
+      _setFieldError('f-sa', msg);
+      return;
+    }
+    if (msg.toLowerCase().startsWith('escalationrate must')) {
+      _setFieldError('f-escalation', msg);
+      return;
+    }
+    if (msg.toLowerCase().startsWith('target must')) {
+      _setFieldError('f-target', msg);
+      return;
+    }
+    if (msg.toLowerCase().startsWith('contrib must')) {
+      _setFieldError('f-contrib', msg);
+      return;
+    }
+  });
+}
+
+function UI_validateBeforeSubmit(spec) {
+  let ok = true;
+
+  const requiredCommon = [
+    ['f-firstname', 'First name is required.'],
+    ['f-lastname', 'Last name is required.'],
+    ['f-dob', 'Date of birth is required.'],
+    ['f-gender', 'Gender is required.'],
+    ['f-email', 'Email is required.'],
+    ['f-occupation', 'Occupation is required.'],
+  ];
+
+  requiredCommon.forEach(([id, msg]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!String(el.value || '').trim()) {
+      _setFieldError(id, msg);
+      ok = false;
+    }
+  });
+
+  if (!_validateAgeField(spec, false)) ok = false;
+
+  ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target'].forEach(field => {
+    if (!_validateNumericField(field, spec, false)) ok = false;
+  });
+
+  const partialEnabled = document.getElementById('partial-mat-content')?.classList.contains('open') || false;
+  const partialCount = _safeNum('f-partial-count');
+  if (partialEnabled && (partialCount == null || partialCount < 1 || partialCount > 10)) {
+    _setFieldError('f-partial-count', 'Partial maturities must be between 1 and 10.');
+    ok = false;
+  }
+
+  return ok;
+}
+
+/* C7: Collect inputs and call the engine */
 async function UI_submitForQuote() {
-  /* Validate common fields */
+  const spec = _getProductSpec(_selectedProduct);
+  if (!spec) {
+    showToast('No specification loaded for selected product.');
+    return;
+  }
+
+  if (!UI_validateBeforeSubmit(spec)) {
+    showToast('Please correct highlighted validation errors.');
+    return;
+  }
+
   const firstname  = document.getElementById('f-firstname').value.trim();
   const lastname   = document.getElementById('f-lastname').value.trim();
   const dob        = document.getElementById('f-dob').value;
@@ -955,35 +1268,23 @@ async function UI_submitForQuote() {
   const phone      = document.getElementById('f-phone').value.trim();
   const idno       = document.getElementById('f-idno').value.trim();
   const freq       = document.getElementById('f-freq').value;
+  const age        = _calcAge(dob);
 
-  if (!firstname || !lastname || !dob || !gender || !email || !occupation) {
-    showToast('⚠️ Please fill in all required fields (marked with *).');
-    return;
-  }
-  const age = _calcAge(dob);
-  if (age < 18 || age > 70) {
-    showToast('⚠️ Entry age must be between 18 and 70 years.');
-    return;
-  }
+  const sa        = _safeNum('f-sa');
+  const term      = _safeNum('f-term');
+  const escalationRate = _safeNum('f-escalation');
+  const contrib   = _safeNum('f-contrib');
+  const retireAge = _safeNum('f-retire');
+  const target    = _safeNum('f-target');
+  const childName = document.getElementById('f-childname')?.value.trim() || '';
+  const childDob  = document.getElementById('f-childdob')?.value || '';
 
-  /* Collect product-specific fields */
-  const cfg         = PRODUCT_CATALOGUE[_selectedProduct];
-  const sa          = _safeNum('f-sa');
-  const term        = _safeNum('f-term');
-  const contrib     = _safeNum('f-contrib');
-  const retireAge   = _safeNum('f-retire');
-  const target      = _safeNum('f-target');
-  const childName   = document.getElementById('f-childname')?.value.trim() || '';
-  const childDob    = document.getElementById('f-childdob')?.value || '';
-
-  /* Partial maturities */
   const partialEnabled = document.getElementById('partial-mat-content')?.classList.contains('open') || false;
   const partialCount   = _safeNum('f-partial-count') || 0;
   const partialMat     = { enabled: partialEnabled, count: partialCount };
 
-  /* Joint life */
-  const jlEnabled  = document.getElementById('joint-life-content')?.classList.contains('open') || false;
-  const jointLife  = {
+  const jlEnabled = document.getElementById('joint-life-content')?.classList.contains('open') || false;
+  const jointLife = {
     enabled: jlEnabled,
     name:    document.getElementById('f-jl-name')?.value.trim()   || '',
     dob:     document.getElementById('f-jl-dob')?.value           || '',
@@ -995,29 +1296,35 @@ async function UI_submitForQuote() {
     jointLife.age = _calcAge(jointLife.dob);
   }
 
-  /* Assemble payload for the calculation engine */
   const payload = {
     product: _selectedProduct,
-    age, gender, smoker, freq,
-    sa:         sa         || null,
-    term:       term       || null,
-    contrib:    contrib    || null,
-    retireAge:  retireAge  || null,
-    target:     target     || null,
+    age, dob, gender, smoker, freq,
+    sa:         sa        || null,
+    term:       term      || null,
+    escalationRate: escalationRate || null,
+    contrib:    contrib   || null,
+    retireAge:  retireAge || null,
+    target:     target    || null,
     childName, childDob,
     partialMat, jointLife,
   };
 
-  /* Show loading state and call engine (Section B) */
   document.getElementById('loading-overlay').classList.add('show');
   let result;
   try {
     result = await CALC_getQuote(payload);
+  } catch (err) {
+    if (Array.isArray(err.validationMessages) && err.validationMessages.length) {
+      UI_applyBackendValidationMessages(err.validationMessages);
+      showToast(err.validationMessages[0]);
+    } else {
+      showToast(err.message || 'Unable to generate quote at this time.');
+    }
+    return;
   } finally {
     document.getElementById('loading-overlay').classList.remove('show');
   }
 
-  /* Hand off to renderer (Section D) */
   const ref    = _makeRef();
   const today  = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
   const person = { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno };
@@ -1032,7 +1339,7 @@ async function UI_submitForQuote() {
   _setScreen(3);
 }
 
-/* ── C8: Small helpers ── */
+/* C8: Small helpers */
 function _safeNum(id) {
   const el = document.getElementById(id);
   if (!el) return null;
@@ -1048,17 +1355,10 @@ function _calcAge(dob) {
 }
 function _makeRef() { return 'LIQ-' + Date.now().toString(36).toUpperCase().slice(-7); }
 
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECTION D — QUOTE RENDERER
-   ══════════════════════════════════════════════════════════════════════════════
-   Takes the result object from Section B and produces the HTML summary card.
-   No calculations here — only display logic.
-══════════════════════════════════════════════════════════════════════════════ */
 function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife, partialMat }) {
   const { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno } = person;
   const { premium, benefits, freeBenefits, note, details } = result;
-  const cfg        = PRODUCT_CATALOGUE[product];
+  const cfg        = _getProductView(product);
   const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
   const gLabel     = { M:'Male', F:'Female' }[gender] || gender;
   const sLabel     = smoker === 'S' ? 'Smoker' : 'Non-Smoker';
@@ -1171,7 +1471,7 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
 /* Build plain-text email body */
 function _buildEmailBody({ ref, today, person, product, freq, result, jointLife, partialMat }) {
   const { firstname, lastname, email, phone, idno, age, gender, smoker, occupation, employer } = person;
-  const cfg        = PRODUCT_CATALOGUE[product];
+  const cfg        = _getProductView(product);
   const { premium, benefits } = result;
   const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
   const benefitLines = benefits.map(b => `  • ${b.risk}: ${b.coverage}`).join('\n');
@@ -1243,6 +1543,8 @@ function showToast(msg) {
 </script>
 </body>
 </html>
+
+
 
 
 
