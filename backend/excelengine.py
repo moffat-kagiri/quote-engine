@@ -32,6 +32,7 @@ DEFAULT_AUTORATER_MAP: Dict[str, AutoraterConfig] = {
             "term": "F13",
             "target": "F14",
             "freq": "F15",
+            "escalationRate": "F16",
         },
         output_cells={
             "premium": "C2",
@@ -47,6 +48,23 @@ DEFAULT_AUTORATER_MAP: Dict[str, AutoraterConfig] = {
             "term": "F13",
             "sa": "F14",
             "freq": "F15",
+            "escalationRate": "F16",
+        },
+        output_cells={
+            "premium": "C2",
+        },
+    ),
+    "withprofit": AutoraterConfig(
+        workbook_path="soma_rates.xlsx",
+        input_sheet="Premium Calculation",
+        output_sheet="Outputs",
+        input_cells={
+            "age": "F11",
+            "gender": "F12",
+            "term": "F13",
+            "sa": "F14",
+            "freq": "F15",
+            "escalationRate": "F16",
         },
         output_cells={
             "premium": "C2",
