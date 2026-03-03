@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
@@ -68,6 +69,17 @@ FIELD_LIBRARY: Dict[str, FieldConstraint] = {
     "contrib": FieldConstraint("contrib", "Monthly Contribution", "number", False, 2000, 200000, 500),
     "retireAge": FieldConstraint("retireAge", "Retirement Age", "int", False, 55, 65, 1),
     "target": FieldConstraint("target", "Target Fund", "number", False, 200000, 5000000, 100000),
+    "escalationRate": FieldConstraint(
+        "escalationRate",
+        "Sum Assured Escalation Rate (%)",
+        "number",
+        False,
+        0,
+        20,
+        0.5,
+        placeholder="5",
+        hint="Annual compounding increase in %.",
+    ),
     "childName": FieldConstraint("childName", "Child Name", "str", False),
     "childDob": FieldConstraint("childDob", "Child Date Of Birth", "date", False),
     "partialMat.enabled": FieldConstraint("partialMat.enabled", "Enable Partial Maturity", "bool", False),
@@ -165,11 +177,11 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
         allows_joint_life=False,
         allows_partial_maturity=False,
         supports_smoker_rating=False,
-        required_fields=("age", "gender", "freq", "sa", "term"),
+        required_fields=("age", "gender", "freq", "sa", "term", "escalationRate"),
         optional_fields=(),
-        financial_limits={"sa": (100000, 10000000)},
+        financial_limits={"sa": (100000, 10000000), "escalationRate": (0, 20)},
         underwriting_flags={"bonus_non_guaranteed": True},
-        default_assumptions={"illustrated_bonus_rate": 0.055},
+        default_assumptions={"illustrated_bonus_rate": 0.055, "escalation_rate": 0.05},
         included_benefits=("Basic Sum Assured", "Reversionary Bonus", "Terminal Bonus"),
         optional_riders=("Accidental Death Benefit",),
         common_exclusions=("Fraud or non-disclosure", "Sanctions restrictions"),
@@ -213,11 +225,11 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
         allows_joint_life=True,
         allows_partial_maturity=True,
         supports_smoker_rating=False,
-        required_fields=("age", "gender", "freq", "target", "term"),
+        required_fields=("age", "gender", "freq", "target", "term", "escalationRate"),
         optional_fields=("childName", "childDob", "partialMat.enabled", "partialMat.count", "jointLife.enabled", "jointLife.age", "jointLife.gender"),
-        financial_limits={"target": (200000, 5000000), "term": (5, 25)},
+        financial_limits={"target": (200000, 5000000), "term": (5, 25), "escalationRate": (0, 20)},
         underwriting_flags={"premium_waiver_on_parent_death": True},
-        default_assumptions={"funding_factor": 1.22},
+        default_assumptions={"funding_factor": 1.22, "escalation_rate": 0.05},
         included_benefits=("Target Fund", "Milestone Disbursements", "Parent Death Benefit"),
         optional_riders=("Accidental Death Benefit", "Critical Illness"),
         common_exclusions=("Fraud or non-disclosure", "Sanctions restrictions"),
@@ -241,6 +253,33 @@ def get_product_spec(product: str) -> ProductSpec:
     return PRODUCT_SPECS[product]
 
 
+def calculate_age_from_dob(dob_value: Any, as_of: Optional[date] = None) -> Optional[int]:
+    """Return age from a YYYY-MM-DD date string/date, or None if invalid."""
+
+    if dob_value in (None, ""):
+        return None
+
+    parsed: Optional[date] = None
+    if isinstance(dob_value, datetime):
+        parsed = dob_value.date()
+    elif isinstance(dob_value, date):
+        parsed = dob_value
+    elif isinstance(dob_value, str):
+        try:
+            parsed = datetime.strptime(dob_value, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    if parsed is None:
+        return None
+
+    today = as_of or date.today()
+    age = today.year - parsed.year
+    if (today.month, today.day) < (parsed.month, parsed.day):
+        age -= 1
+    return age
+
+
 def normalize_payload(payload: Mapping[str, Any]) -> Dict[str, Any]:
     """Normalize aliases from UI and server callers into one shape."""
 
@@ -251,6 +290,14 @@ def normalize_payload(payload: Mapping[str, Any]) -> Dict[str, Any]:
         normalized["jointLife"] = {}
     if "partialMat" not in normalized:
         normalized["partialMat"] = {}
+    if "escalation_rate" in normalized and "escalationRate" not in normalized:
+        normalized["escalationRate"] = normalized.get("escalation_rate")
+    if "escalation" in normalized and "escalationRate" not in normalized:
+        normalized["escalationRate"] = normalized.get("escalation")
+    if normalized.get("age") in (None, "") and normalized.get("dob"):
+        calculated_age = calculate_age_from_dob(normalized.get("dob"))
+        if calculated_age is not None:
+            normalized["age"] = calculated_age
     return normalized
 
 
