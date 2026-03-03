@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any, Dict
 
 from flask import Flask, jsonify, request
@@ -7,11 +8,22 @@ from flask_cors import CORS
 
 from excelengine import calculate_quote_from_excel
 from premiums import calculate_quote as calculate_fallback_quote
-from productspecs import normalize_payload, validate_payload
+from productspecs import BRANDS, FIELD_LIBRARY, PRODUCT_SPECS, normalize_payload, validate_payload
 
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.get("/productspecs")
+def productspecs() -> Any:
+    return jsonify(
+        {
+            "brands": BRANDS,
+            "fields": {key: asdict(value) for key, value in FIELD_LIBRARY.items()},
+            "products": {key: asdict(value) for key, value in PRODUCT_SPECS.items()},
+        }
+    )
 
 
 @app.post("/quote")
