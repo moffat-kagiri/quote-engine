@@ -56,6 +56,7 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
     contrib = float(p.get("contrib") or 0)
     retire_age = int(p.get("retireAge") or 60)
     target = float(p.get("target") or 0)
+    escalation_rate = float(p.get("escalationRate") or 0)
     freq = str(p.get("freq") or "monthly")
     freq_mult = _FREQ_MULT.get(freq, 1)
 
@@ -122,13 +123,23 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
         note = "Maturity benefit includes estimated non-guaranteed additions."
 
     elif product == "withprofit":
-        mp = round((sa / (term * 12)) * 1.18)
+        escalation = escalation_rate / 100.0
+        projected_sa = sa * ((1 + escalation) ** term)
+        avg_sa = (sa + projected_sa) / 2
+        mp = round((avg_sa / (term * 12)) * 1.18)
         premium = mp * freq_mult
-        bonus = round(sa * 0.055 * term)
-        total = sa + bonus
-        details = [["Basic Sum Assured", f"KES {int(sa):,}"], ["Policy Term", f"{term} yrs"], ["Projected Bonus Rate", "5.5% p.a. (illustrated)"]]
+        bonus = round(projected_sa * 0.055 * term)
+        total = projected_sa + bonus
+        details = [
+            ["Basic Sum Assured", f"KES {int(sa):,}"],
+            ["Policy Term", f"{term} yrs"],
+            ["Escalation Rate", f"{escalation_rate:.2f}% p.a. (compounding)"],
+            ["Projected Maturity Sum Assured", f"KES {int(projected_sa):,}"],
+            ["Projected Bonus Rate", "5.5% p.a. (illustrated)"],
+        ]
         benefits = [
             {"risk": "Basic Sum Assured", "coverage": f"KES {int(sa):,}", "note": "Guaranteed", "highlight": False},
+            {"risk": "Projected Escalated Sum Assured", "coverage": f"KES {int(projected_sa):,}", "note": "Compounded annual escalation", "highlight": False},
             {"risk": "Projected Reversionary Bonus", "coverage": f"KES {bonus:,}", "note": "Non-guaranteed, illustrative only", "highlight": False},
             {"risk": "Projected Total at Maturity", "coverage": f"KES {int(total):,}", "note": "Including terminal bonus estimate", "highlight": True},
         ]
@@ -160,18 +171,25 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
         note = "Projections at 8% p.a. Actual returns depend on fund performance."
 
     elif product == "education":
-        monthly = round(target / (term * 12 * 1.22))
+        escalation = escalation_rate / 100.0
+        projected_target = target * ((1 + escalation) ** term)
+        monthly = round(projected_target / (term * 12 * 1.22))
         premium = monthly * freq_mult
-        m1 = round(target * 0.25)
-        m2 = round(target * 0.35)
-        m3 = round(target * 0.40)
-        details = [["Target Education Fund", f"KES {int(target):,}"], ["Policy Term", f"{term} yrs"]]
+        m1 = round(projected_target * 0.25)
+        m2 = round(projected_target * 0.35)
+        m3 = round(projected_target * 0.40)
+        details = [
+            ["Initial Target Education Fund", f"KES {int(target):,}"],
+            ["Escalation Rate", f"{escalation_rate:.2f}% p.a. (compounding)"],
+            ["Projected Target at Maturity", f"KES {int(projected_target):,}"],
+            ["Policy Term", f"{term} yrs"],
+        ]
         benefits = [
-            {"risk": "Full Target Fund", "coverage": f"KES {int(target):,}", "note": "At maturity", "highlight": True},
+            {"risk": "Full Target Fund", "coverage": f"KES {int(projected_target):,}", "note": "At maturity (escalated target)", "highlight": True},
             {"risk": f"Milestone 1 (yr {int(term * 0.4)})", "coverage": f"KES {m1:,}", "note": "University entry", "highlight": False},
             {"risk": f"Milestone 2 (yr {int(term * 0.6)})", "coverage": f"KES {m2:,}", "note": "Mid-university", "highlight": False},
             {"risk": "Milestone 3 (maturity)", "coverage": f"KES {m3:,}", "note": "Final release", "highlight": False},
-            {"risk": "Parent Death Benefit", "coverage": f"KES {int(target):,}", "note": "Premiums waived + fund secured", "highlight": False},
+            {"risk": "Parent Death Benefit", "coverage": f"KES {int(projected_target):,}", "note": "Premiums waived + fund secured", "highlight": False},
         ]
         if partial_mat.get("enabled") and (partial_mat.get("count") or 0) > 0:
             count = int(partial_mat["count"])
@@ -195,8 +213,10 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
         raise ValueError(f"Unsupported product '{product}'.")
 
     if joint_life.get("enabled"):
-        premium = round(premium * 1.2)
-        details.append(["Joint Life", "Enabled (illustrative +20% loading)"])
+        premium = round(premium * 1.85) 
+        # Joint life policies typically get a 15% discount compared to two separate policies, 
+        # so we apply a 85% loading instead of doubling the premium.
+        details.append(["Joint Life", "Enabled (illustrative 15% discount)"])
 
     return {
         "premium": round(premium),
