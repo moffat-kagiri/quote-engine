@@ -1,0 +1,207 @@
+from __future__ import annotations
+
+from typing import Any, Dict, Mapping
+
+from productspecs import normalize_payload
+
+
+_FREQ_MULT = {
+    "monthly": 1,
+    "quarterly": 3,
+    "annually": 12,
+}
+
+
+def _term_monthly_premium(age: int, gender: str, smoker: str, sa: float, term: int) -> int:
+    base = sa * 0.0025
+    base *= 1 + (age - 30) * 0.04
+    if gender == "M":
+        base *= 1.15
+    if smoker == "S":
+        base *= 1.40
+    return round(base / 12)
+
+
+def _whole_life_monthly_premium(age: int, gender: str, smoker: str, sa: float) -> int:
+    base = sa * 0.004
+    base *= 1 + (age - 25) * 0.045
+    if gender == "M":
+        base *= 1.12
+    if smoker == "S":
+        base *= 1.45
+    return round(base / 12)
+
+
+def _endowment_monthly_premium(age: int, gender: str, smoker: str, sa: float, term: int) -> int:
+    mort = _term_monthly_premium(age, gender, smoker, sa, term)
+    return round(mort + sa / (term * 12 * 1.3))
+
+
+def _pension_fund(contrib: float, age: int, retire_age: int) -> int:
+    rate = 0.08
+    months = (retire_age - age) * 12
+    return round(contrib * (((1 + rate / 12) ** months - 1) / (rate / 12)))
+
+
+def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    """Generic Python fallback quote engine (replacement for JS_FALLBACK_ENGINE)."""
+
+    p = normalize_payload(payload)
+    product = p.get("product")
+    age = int(p.get("age") or 0)
+    gender = str(p.get("gender") or "")
+    smoker = str(p.get("smoker") or "NS")
+    sa = float(p.get("sa") or 0)
+    term = int(p.get("term") or 0)
+    contrib = float(p.get("contrib") or 0)
+    retire_age = int(p.get("retireAge") or 60)
+    target = float(p.get("target") or 0)
+    freq = str(p.get("freq") or "monthly")
+    freq_mult = _FREQ_MULT.get(freq, 1)
+
+    joint_life = p.get("jointLife") or {}
+    partial_mat = p.get("partialMat") or {}
+
+    premium = 0
+    benefits = []
+    free_benefits = []
+    note = ""
+    details = []
+
+    if product == "term":
+        mp = _term_monthly_premium(age, gender, smoker, sa, term)
+        premium = mp * freq_mult
+        le = min(sa * 0.05, 150000)
+        ci = sa * 0.5
+        details = [["Sum Assured", f"KES {int(sa):,}"], ["Policy Term", f"{term} yrs"], ["Cover Expiry Age", f"{age + term} yrs"]]
+        benefits = [
+            {"risk": "Death Benefit", "coverage": f"KES {int(sa):,}", "note": "On death within term", "highlight": True},
+            {"risk": "Last Expense Cover", "coverage": f"KES {int(le):,}", "note": "Immediate payout", "highlight": False},
+            {"risk": "Critical Illness", "coverage": f"KES {int(ci):,}", "note": "50% of Sum Assured", "highlight": False},
+        ]
+        if partial_mat.get("enabled") and (partial_mat.get("count") or 0) > 0:
+            count = int(partial_mat["count"])
+            slice_amount = round(sa * 0.1)
+            benefits.append(
+                {
+                    "risk": f"Partial Maturity x{count}",
+                    "coverage": f"KES {slice_amount:,} each",
+                    "note": "Subject to policy conditions",
+                    "highlight": False,
+                }
+            )
+        free_benefits = ["Grief counselling support", "Funeral service directory access"]
+        note = "No maturity value. Cover lapses if premiums are not maintained."
+
+    elif product == "wholelife":
+        mp = _whole_life_monthly_premium(age, gender, smoker, sa)
+        premium = mp * freq_mult
+        le = min(sa * 0.08, 200000)
+        cv5 = round(mp * 12 * 5 * 0.45)
+        details = [["Sum Assured", f"KES {int(sa):,}"], ["Cover Duration", "Whole of Life"], ["Indicative Cash Value (5yr)", f"KES {cv5:,}"]]
+        benefits = [
+            {"risk": "Death Benefit", "coverage": f"KES {int(sa):,}", "note": "Payable any time", "highlight": True},
+            {"risk": "Last Expense Cover", "coverage": f"KES {int(le):,}", "note": "Within 48 hrs", "highlight": False},
+            {"risk": "Guaranteed Cash Value", "coverage": "After year 3", "note": "Partial surrender allowed", "highlight": False},
+        ]
+        free_benefits = ["Medical second opinion service", "Annual policy review", "Grief counselling"]
+        note = "Policy acquires cash surrender value after year 3."
+
+    elif product == "endowment":
+        mp = _endowment_monthly_premium(age, gender, smoker, sa, term)
+        premium = mp * freq_mult
+        mat = round(sa * 1.15)
+        le = min(sa * 0.06, 100000)
+        details = [["Sum Assured", f"KES {int(sa):,}"], ["Policy Term", f"{term} yrs"], ["Maturity Age", f"{age + term} yrs"]]
+        benefits = [
+            {"risk": "Death Benefit", "coverage": f"KES {int(sa):,}", "note": "On death before maturity", "highlight": False},
+            {"risk": "Maturity Benefit", "coverage": f"KES {mat:,}", "note": "Paid at end of term", "highlight": True},
+            {"risk": "Last Expense", "coverage": f"KES {int(le):,}", "note": "Immediate payout", "highlight": False},
+        ]
+        free_benefits = ["Premium waiver on total disability", "Policy loan facility", "Paid-up option"]
+        note = "Maturity benefit includes estimated non-guaranteed additions."
+
+    elif product == "withprofit":
+        mp = round((sa / (term * 12)) * 1.18)
+        premium = mp * freq_mult
+        bonus = round(sa * 0.055 * term)
+        total = sa + bonus
+        details = [["Basic Sum Assured", f"KES {int(sa):,}"], ["Policy Term", f"{term} yrs"], ["Projected Bonus Rate", "5.5% p.a. (illustrated)"]]
+        benefits = [
+            {"risk": "Basic Sum Assured", "coverage": f"KES {int(sa):,}", "note": "Guaranteed", "highlight": False},
+            {"risk": "Projected Reversionary Bonus", "coverage": f"KES {bonus:,}", "note": "Non-guaranteed, illustrative only", "highlight": False},
+            {"risk": "Projected Total at Maturity", "coverage": f"KES {int(total):,}", "note": "Including terminal bonus estimate", "highlight": True},
+        ]
+        free_benefits = ["Annual bonus declaration", "Policyholder dividend share", "Annual bonus statement"]
+        note = "Bonus rates are non-guaranteed and depend on fund performance."
+
+    elif product == "pension":
+        premium = contrib * freq_mult
+        years = retire_age - age
+        fund = _pension_fund(contrib, age, retire_age)
+        annuity = round(fund * 0.006)
+        db = round(contrib * 12 * years * 0.5)
+        details = [
+            ["Monthly Contribution", f"KES {int(contrib):,}"],
+            ["Retirement Age", f"{retire_age} yrs"],
+            ["Accumulation Period", f"{years} yrs"],
+            ["Assumed Growth", "8% p.a. (illustrated)"],
+        ]
+        benefits = [
+            {"risk": "Projected Fund at Retirement", "coverage": f"KES {fund:,}", "note": "Illustrated at 8% growth", "highlight": True},
+            {"risk": "Estimated Monthly Annuity", "coverage": f"KES {annuity:,}", "note": "Illustrative monthly pension", "highlight": True},
+            {"risk": "Death Benefit", "coverage": f"KES {db:,}", "note": "Fund value paid to estate", "highlight": False},
+        ]
+        free_benefits = [
+            "Tax-deductible up to KES 20,000/month",
+            "Investment choice (MMF / balanced / equity)",
+            "Partial withdrawal after 10 yrs",
+        ]
+        note = "Projections at 8% p.a. Actual returns depend on fund performance."
+
+    elif product == "education":
+        monthly = round(target / (term * 12 * 1.22))
+        premium = monthly * freq_mult
+        m1 = round(target * 0.25)
+        m2 = round(target * 0.35)
+        m3 = round(target * 0.40)
+        details = [["Target Education Fund", f"KES {int(target):,}"], ["Policy Term", f"{term} yrs"]]
+        benefits = [
+            {"risk": "Full Target Fund", "coverage": f"KES {int(target):,}", "note": "At maturity", "highlight": True},
+            {"risk": f"Milestone 1 (yr {int(term * 0.4)})", "coverage": f"KES {m1:,}", "note": "University entry", "highlight": False},
+            {"risk": f"Milestone 2 (yr {int(term * 0.6)})", "coverage": f"KES {m2:,}", "note": "Mid-university", "highlight": False},
+            {"risk": "Milestone 3 (maturity)", "coverage": f"KES {m3:,}", "note": "Final release", "highlight": False},
+            {"risk": "Parent Death Benefit", "coverage": f"KES {int(target):,}", "note": "Premiums waived + fund secured", "highlight": False},
+        ]
+        if partial_mat.get("enabled") and (partial_mat.get("count") or 0) > 0:
+            count = int(partial_mat["count"])
+            slice_amount = round(target * 0.08)
+            benefits.append(
+                {
+                    "risk": f"Partial Maturity x{count}",
+                    "coverage": f"KES {slice_amount:,} each",
+                    "note": "Subject to policy conditions",
+                    "highlight": False,
+                }
+            )
+        free_benefits = [
+            "Premium waiver on parent death/disability",
+            "Scholarship advisory service",
+            "University placement support",
+        ]
+        note = "Education milestones are structured disbursements from the accumulated fund."
+
+    else:
+        raise ValueError(f"Unsupported product '{product}'.")
+
+    if joint_life.get("enabled"):
+        premium = round(premium * 1.2)
+        details.append(["Joint Life", "Enabled (illustrative +20% loading)"])
+
+    return {
+        "premium": round(premium),
+        "benefits": benefits,
+        "freeBenefits": free_benefits,
+        "note": note,
+        "details": details,
+    }
