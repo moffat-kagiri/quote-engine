@@ -381,11 +381,11 @@ input:focus, select:focus, textarea:focus {
     <div class="form-group">
       <label>Occupation <span style="color:#c0392b">*</span></label>
       <input type="text" id="f-occupation" placeholder="e.g. Software Engineer" />
-      <span class="hint">Occupation class will be determined during underwriting</span>
+      <span class="hint"> </span>
     </div>
     <div class="form-group">
       <label>Employer <span style="color:#888">(optional)</span></label>
-      <input type="text" id="f-employer" placeholder="e.g. Kenya Commercial Bank" />
+      <input type="text" id="f-employer" placeholder="e.g. Stanbic Bank" />
     </div>
     <div class="form-group">
       <label>Email Address <span style="color:#c0392b">*</span></label>
@@ -508,7 +508,7 @@ const PRODUCT_CATALOGUE = {
     hasJointLife:  false,
   },
   education: {
-    label:         'Soma Plan',
+    label:         'Education Policy',
     icon:          '🎓',
     desc:          'Saves for education funds at defined milestones for your child.',
     fields:        ['target-amount', 'term', 'child-name', 'child-dob'],
@@ -636,7 +636,7 @@ const FIELD_TEMPLATES = {
      See the commented block EXCEL_ENGINE below.
 
    OPTION 3 — Pure JS fallback (for offline/demo use)
-     The JS_FALLBACK_ENGINE below runs if the Python endpoint is unreachable.
+     The Python fallback endpoint below runs if the primary Python endpoint is unreachable.
      It uses simplified illustrative rates. Clearly labelled as illustrative.
 ══════════════════════════════════════════════════════════════════════════════ */
 
@@ -652,16 +652,17 @@ const PYTHON_ENDPOINT = "http://localhost:5050/quote";
 
 /**
  * USE_PYTHON_ENGINE — set to true to call the Python server.
- * Set to false to always use the JS fallback (demo/offline mode).
+ * Set to false to always use the Python fallback endpoint (demo/offline mode).
  */
 const USE_PYTHON_ENGINE = true;
+const PYTHON_FALLBACK_ENDPOINT = "http://localhost:5050/quote/fallback";
 
 /* ── B2: Main entry point called by the UI ── */
 
 /**
  * CALC_getQuote(payload) → Promise<QuoteResult>
  *
- * Payload sent to the engine (Python or JS fallback):
+ * Payload sent to the engine (Python endpoints):
  * {
  *   product:            string   e.g. "term"
  *   age:                number   main life age at entry
@@ -677,7 +678,7 @@ const USE_PYTHON_ENGINE = true;
  *   jointLife:          { enabled: bool, age, gender, name, dob, email, phone }
  * }
  *
- * Expected response shape from Python server (or JS fallback):
+ * Expected response shape from Python server:
  * {
  *   premium:            number   (in the chosen frequency unit)
  *   benefits:           Array<{ risk: string, coverage: string, note: string, highlight: bool }>
@@ -695,16 +696,31 @@ async function CALC_getQuote(payload) {
         body:    JSON.stringify(payload),
         signal:  AbortSignal.timeout(12000), // 12-second timeout
       });
-      if (!resp.ok) throw new Error(`Server responded ${resp.status}`);
+      if (!resp.ok) throw new Error('Server responded ' + resp.status);
       return await resp.json();
     } catch (err) {
-      console.warn('[QuoteEngine] Python endpoint unreachable — falling back to JS engine.', err.message);
-      showToast('⚠️ Using offline estimates — Python server not reachable');
-      return JS_FALLBACK_ENGINE(payload);
+      console.warn('[QuoteEngine] Primary Python endpoint unreachable; trying Python fallback.', err.message);
+      showToast('Primary engine unavailable - using Python fallback estimates');
+      return CALC_getPythonFallbackQuote(payload);
     }
   }
-  // USE_PYTHON_ENGINE = false → always use JS fallback
-  return JS_FALLBACK_ENGINE(payload);
+
+  // USE_PYTHON_ENGINE = false -> always use Python fallback endpoint
+  return CALC_getPythonFallbackQuote(payload);
+}
+
+async function CALC_getPythonFallbackQuote(payload) {
+  const resp = await fetch(PYTHON_FALLBACK_ENDPOINT, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+    signal:  AbortSignal.timeout(12000),
+  });
+
+  if (!resp.ok) {
+    throw new Error('Fallback server responded ' + resp.status + '. Ensure quote_server.py is running.');
+  }
+  return await resp.json();
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -722,7 +738,7 @@ async function CALC_getQuote(payload) {
      The PYTHON_ENDPOINT already handles this if your server is wired to Excel.
 
    ── PATTERN A STUB (SheetJS) ──────────────────────────────────────────
-   const EXCEL_FILE_URL = './rates/liberty_rates.xlsx'; // or use a file input
+   const EXCEL_FILE_URL = 'soma_rates.xlsx'; // or use a file input
 
    async function EXCEL_ENGINE(payload) {
      // Load the workbook (either via URL fetch or FileReader from <input type="file">)
@@ -732,11 +748,15 @@ async function CALC_getQuote(payload) {
 
      // Write inputs to named cells
      // TO CUSTOMISE: change 'Inputs' to your sheet name; 'B2','B3'… to your cell refs
-     const inputSheet = workbook.Sheets['Inputs'];
+     const inputSheet = workbook.Sheets['Premium Calculation'];
      inputSheet['B2'] = { v: payload.age,    t: 'n' };  // Age at entry
-     inputSheet['B3'] = { v: payload.gender, t: 's' };  // Gender
-     inputSheet['B4'] = { v: payload.sa,     t: 'n' };  // Sum assured
-     inputSheet['B5'] = { v: payload.term,   t: 'n' };  // Term (years)
+     inputSheet['F12'] = { v: payload.gender, t: 's' };  // Gender
+     inputSheet['F14'] = { v: payload.sa,     t: 'n' };  // Sum assured
+     inputSheet['F13'] = { v: payload.term,   t: 'n' };  // Term (years)
+     inputSheet['F16'] = { v: payload.escalationRate,    t: 'n' };  // Sum Assured Escalation Rate
+     inputSheet['F12'] = { v: payload.gender, t: 's' };  // Gender
+     inputSheet['F14'] = { v: payload.sa,     t: 'n' };  // Sum assured
+     inputSheet['F13'] = { v: payload.term,   t: 'n' };  // Term (years)
      // Add more input cells as needed …
 
      // SheetJS does NOT recalculate formulas — you must read pre-computed output cells
@@ -758,156 +778,7 @@ async function CALC_getQuote(payload) {
    }
    ─────────────────────────────────────────────────────────────────────── */
 
-/* ── B3: JavaScript fallback engine (illustrative / offline) ──
-   ─────────────────────────────────────────────────────────────
-   TO UPDATE RATES: Edit the helper functions below.
-   These are simplified illustrative formulae only — replace with
-   your actual rate tables once the Python server is connected.
-   Each helper is clearly labelled.
-   ───────────────────────────────────────────────────────────── */
-function JS_FALLBACK_ENGINE(p) {
-  const freqMult = { monthly:1, quarterly:3, annually:12 }[p.freq] || 1;
-  const freqLabel = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[p.freq];
-
-  /* ── helper: term life mortality loading ──
-     TO REPLACE: swap this formula with a table lookup once you have
-     your company's A/S rates imported into the Python script. */
-  function termMonthlyPrem(age, gender, smoker, sa, term) {
-    let base = sa * 0.0025;
-    base *= 1 + (age - 30) * 0.04;
-    if (gender === 'M') base *= 1.15;
-    if (smoker === 'S') base *= 1.40;
-    return Math.round(base / 12);
-  }
-
-  /* ── helper: whole life loading ── */
-  function wholeLifeMonthlyPrem(age, gender, smoker, sa) {
-    let base = sa * 0.004;
-    base *= 1 + (age - 25) * 0.045;
-    if (gender === 'M') base *= 1.12;
-    if (smoker === 'S') base *= 1.45;
-    return Math.round(base / 12);
-  }
-
-  /* ── helper: endowment (mortality + savings loading) ── */
-  function endowmentMonthlyPrem(age, gender, smoker, sa, term) {
-    const mort = termMonthlyPrem(age, gender, smoker, sa, term);
-    return Math.round(mort + sa / (term * 12 * 1.3));
-  }
-
-  /* ── helper: pension fund projection at 8% p.a. ──
-     TO UPDATE: change the rate r = 0.08 to match your assumed crediting rate */
-  function pensionFund(contrib, age, retireAge) {
-    const r = 0.08, n = (retireAge - age) * 12;
-    return Math.round(contrib * ((Math.pow(1 + r/12, n) - 1) / (r/12)));
-  }
-
-  /* ─── Build result per product ─── */
-  const { product, age, gender, smoker, sa, term, contrib, retireAge, target, freq } = p;
-  let premium = 0, benefits = [], freeBenefits = [], note = '', details = [];
-
-  if (product === 'term') {
-    const mp  = termMonthlyPrem(age, gender, smoker, sa, term);
-    premium   = mp * freqMult;
-    const le  = Math.min(sa * 0.05, 150000);
-    const ci  = sa * 0.5;
-    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Cover Expiry Age',(age+term)+' yrs']];
-    benefits  = [
-      { risk:'Death Benefit',       coverage:'KES '+sa.toLocaleString(),  note:'On death within term', highlight:true  },
-      { risk:'Last Expense Cover',  coverage:'KES '+le.toLocaleString(),  note:'Immediate payout',     highlight:false },
-      { risk:'Critical Illness',    coverage:'KES '+ci.toLocaleString(),  note:'50% of Sum Assured',   highlight:false },
-    ];
-    if (p.partialMat?.enabled && p.partialMat.count > 0) {
-      const slice = Math.round(sa * 0.1);
-      benefits.push({ risk:'Partial Maturity ×'+p.partialMat.count, coverage:'KES '+slice.toLocaleString()+' each', note:'Subject to policy conditions', highlight:false });
-    }
-    freeBenefits = ['Grief counselling support','Funeral service directory access'];
-    note = 'No maturity value. Cover lapses if premiums are not maintained.';
-  }
-
-  else if (product === 'wholelife') {
-    const mp  = wholeLifeMonthlyPrem(age, gender, smoker, sa);
-    premium   = mp * freqMult;
-    const le  = Math.min(sa * 0.08, 200000);
-    const cv5 = Math.round(mp * 12 * 5 * 0.45);
-    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Cover Duration','Whole of Life'],['Indicative Cash Value (5yr)','KES '+cv5.toLocaleString()]];
-    benefits  = [
-      { risk:'Death Benefit',      coverage:'KES '+sa.toLocaleString(), note:'Payable any time',        highlight:true  },
-      { risk:'Last Expense Cover', coverage:'KES '+le.toLocaleString(), note:'Within 48 hrs',           highlight:false },
-      { risk:'Guaranteed Cash Value', coverage:'After year 3',          note:'Partial surrender allowed',highlight:false },
-    ];
-    freeBenefits = ['Medical second opinion service','Annual policy review','Grief counselling'];
-    note = 'Policy acquires cash surrender value after year 3.';
-  }
-
-  else if (product === 'endowment') {
-    const mp  = endowmentMonthlyPrem(age, gender, smoker, sa, term);
-    premium   = mp * freqMult;
-    const mat = Math.round(sa * 1.15);
-    const le  = Math.min(sa * 0.06, 100000);
-    details   = [['Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Maturity Age',(age+term)+' yrs']];
-    benefits  = [
-      { risk:'Death Benefit',   coverage:'KES '+sa.toLocaleString(),  note:'On death before maturity', highlight:false },
-      { risk:'Maturity Benefit',coverage:'KES '+mat.toLocaleString(), note:'Paid at end of term',       highlight:true  },
-      { risk:'Last Expense',    coverage:'KES '+le.toLocaleString(),  note:'Immediate payout',          highlight:false },
-    ];
-    freeBenefits = ['Premium waiver on total disability','Policy loan facility','Paid-up option'];
-    note = 'Maturity benefit includes estimated non-guaranteed additions.';
-  }
-
-  else if (product === 'withprofit') {
-    const mp    = Math.round((sa / (term * 12)) * 1.18);
-    premium     = mp * freqMult;
-    const bonus = Math.round(sa * 0.055 * term);
-    const total = sa + bonus;
-    details = [['Basic Sum Assured','KES '+sa.toLocaleString()],['Policy Term',term+' yrs'],['Projected Bonus Rate','5.5% p.a. (illustrated)']];
-    benefits = [
-      { risk:'Basic Sum Assured',       coverage:'KES '+sa.toLocaleString(),    note:'Guaranteed',                   highlight:false },
-      { risk:'Projected Reversionary Bonus', coverage:'KES '+bonus.toLocaleString(), note:'Non-guaranteed, illust. only', highlight:false },
-      { risk:'Projected Total at Maturity', coverage:'KES '+total.toLocaleString(), note:'Incl. terminal bonus est.',   highlight:true  },
-    ];
-    freeBenefits = ['Annual bonus declaration','Policyholder dividend share','Annual bonus statement'];
-    note = 'Bonus rates are non-guaranteed and depend on fund performance.';
-  }
-
-  else if (product === 'pension') {
-    premium = contrib * freqMult;
-    const yrs = retireAge - age;
-    const fund = pensionFund(contrib, age, retireAge);
-    const ann  = Math.round(fund * 0.006);
-    const db   = Math.round(contrib * 12 * yrs * 0.5);
-    details  = [['Monthly Contribution','KES '+contrib.toLocaleString()],['Retirement Age',retireAge+' yrs'],['Accumulation Period',yrs+' yrs'],['Assumed Growth','8% p.a. (illustrated)']];
-    benefits = [
-      { risk:'Projected Fund at Retirement', coverage:'KES '+fund.toLocaleString(), note:'Illustrated at 8% growth',     highlight:true  },
-      { risk:'Estimated Monthly Annuity',    coverage:'KES '+ann.toLocaleString(),  note:'Illustrative monthly pension',  highlight:true  },
-      { risk:'Death Benefit',                coverage:'KES '+db.toLocaleString(),   note:'Fund value paid to estate',     highlight:false },
-    ];
-    freeBenefits = ['Tax-deductible up to KES 20,000/month','Investment choice (MMF / balanced / equity)','Partial withdrawal after 10 yrs'];
-    note = 'Projections at 8% p.a. Actual returns depend on fund performance.';
-  }
-
-  else if (product === 'education') {
-    premium = Math.round(target / (term * 12 * 1.22)) * freqMult;
-    const m1 = Math.round(target * 0.25), m2 = Math.round(target * 0.35), m3 = Math.round(target * 0.40);
-    details  = [['Target Education Fund','KES '+target.toLocaleString()],['Policy Term',term+' yrs']];
-    benefits = [
-      { risk:'Full Target Fund',     coverage:'KES '+target.toLocaleString(), note:'At maturity',          highlight:true  },
-      { risk:'Milestone 1 (yr '+(Math.floor(term*0.4))+')', coverage:'KES '+m1.toLocaleString(), note:'University entry',  highlight:false },
-      { risk:'Milestone 2 (yr '+(Math.floor(term*0.6))+')', coverage:'KES '+m2.toLocaleString(), note:'Mid-university',    highlight:false },
-      { risk:'Milestone 3 (maturity)', coverage:'KES '+m3.toLocaleString(), note:'Final release',          highlight:false },
-      { risk:'Parent Death Benefit', coverage:'KES '+target.toLocaleString(), note:'Premiums waived + fund secured', highlight:false },
-    ];
-    if (p.partialMat?.enabled && p.partialMat.count > 0) {
-      const slice = Math.round(target * 0.08);
-      benefits.push({ risk:'Partial Maturity ×'+p.partialMat.count, coverage:'KES '+slice.toLocaleString()+' each', note:'Subject to policy conditions', highlight:false });
-    }
-    freeBenefits = ['Premium waiver on parent death/disability','Scholarship advisory service','University placement support'];
-    note = 'Education milestones are structured disbursements from the accumulated fund.';
-  }
-
-  return { premium, benefits, freeBenefits, note, details };
-}
-
+/* B3 removed: JS_FALLBACK_ENGINE has been replaced by premiums.py via PYTHON_FALLBACK_ENDPOINT. */
 
 /* ══════════════════════════════════════════════════════════════════════════════
    SECTION C — UI LOGIC
@@ -1372,3 +1243,7 @@ function showToast(msg) {
 </script>
 </body>
 </html>
+
+
+
+
