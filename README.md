@@ -2,12 +2,13 @@
 
 ## Structure
 
-- `frontend/libertyquotes.html` - user interface for quote generation
-- `backend/quote_server.py` - Flask API (`/quote`, `/quote/fallback`)
+- `frontend/libertyquotes.html` - spec-driven quote UI (loads product definitions from backend)
+- `backend/quote_server.py` - Flask API (`/productspecs`, `/quote`, `/quote/fallback`)
+- `backend/productspecs.py` - product matrix, field constraints, payload normalization, validation, age-from-DOB utility
 - `backend/excelengine.py` - product-specific Excel autorater integration
 - `backend/premiums.py` - generic Python fallback premium engine
-- `backend/productspecs.py` - product matrix/specifications and validation
 - `backend/soma_rates.xlsx` - Excel autorater workbook
+- `requirements.txt` - Python dependencies
 
 ## Prerequisites
 
@@ -22,13 +23,13 @@ From the project root:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install flask flask-cors xlwings
+pip install -r requirements.txt
 ```
 
-If you only want Python fallback ratings (no Excel autorater), you can skip `xlwings`:
+If you only want Python fallback ratings (no Excel autorater), you can skip `xlwings` by installing manually:
 
 ```powershell
-pip install flask flask-cors
+pip install Flask flask-cors
 ```
 
 ## Run Backend
@@ -41,10 +42,15 @@ python backend\quote_server.py
 
 Server runs on `http://127.0.0.1:5050`.
 
-Endpoints:
+### API Endpoints
 
-- `POST /quote` - primary engine (Excel where available, else Python fallback)
-- `POST /quote/fallback` - always Python fallback (`premiums.py`)
+- `GET /productspecs`
+  - Returns `brands`, `fields`, and `products` from `productspecs.py`
+  - Frontend uses this as the source of truth for product cards and validation limits
+- `POST /quote`
+  - Primary engine (Excel autorater where configured, otherwise Python fallback)
+- `POST /quote/fallback`
+  - Always Python fallback (`premiums.py`)
 
 ## Open Frontend
 
@@ -52,10 +58,26 @@ Open this file in your browser:
 
 - `frontend/libertyquotes.html`
 
-The frontend is already configured to call:
+Frontend calls:
 
+- `http://localhost:5050/productspecs`
 - `http://localhost:5050/quote`
 - `http://localhost:5050/quote/fallback`
+
+## Validation Behavior
+
+- Frontend enforces dynamic constraints from backend product specs (age range, term range, financial limits)
+- Backend performs authoritative validation via `validate_payload(...)`
+- Validation errors from backend are surfaced in the frontend form
+- Age can be derived from `dob` server-side via `calculate_age_from_dob(...)`
+
+## Escalation Rate
+
+- `escalationRate` is required for:
+  - `withprofit`
+  - `education`
+- Frontend renders this as `Escalation Rate (% p.a.)`
+- It is validated against product constraints and passed to pricing engines
 
 ## Quick Validation
 
