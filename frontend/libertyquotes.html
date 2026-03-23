@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liberty — Life Assurance Portal</title>
+<title>Liberty - Life Assurance Portal</title>
 <style>
 
-/* ══════════════════════════════════════════════════════════════
-   DESIGN TOKENS — change brand colours here
-══════════════════════════════════════════════════════════════ */
+/* Design Tokens: change brand colors here */
 :root {
   --ink:         #0d1117;
   --paper:       #DEEFFF;
@@ -24,7 +22,7 @@
   --shadow-lg:   0 4px 24px rgba(13,17,23,0.14);
   --radius:      3px;
   --radius-lg:   8px;
-  /* Typography — Arial-family throughout */
+  /* Typography: Arial family throughout */
   --font-body:   'Helvetica Neue', Arial, Helvetica, sans-serif;
   --font-mono:   'Courier New', Courier, monospace;
   --fs-base:     13px;
@@ -41,7 +39,7 @@ body {
   line-height: 1.55;
 }
 
-/* ── HEADER ── */
+/* Header */
 header {
   background: var(--ink);
   padding: 0 40px;
@@ -57,7 +55,7 @@ header {
 .logo span { color: var(--white); font-weight: 400; }
 .header-tag { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 
-/* ── PROGRESS BAR ── */
+/* Progress Bar */
 .progress-bar {
   background: var(--gray);
   border-bottom: 1px solid #b8c8d8;
@@ -87,12 +85,12 @@ header {
 .step-pill.done .num { background: var(--green); }
 .step-arrow { color: #aab0bb; font-size: 0.75rem; padding: 0 2px; }
 
-/* ── MAIN ── */
+/* Main */
 main { max-width: 900px; margin: 0 auto; padding: 36px 20px; }
 .section-title { font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
 .section-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 28px; }
 
-/* ── PRODUCT CARDS ── */
+/* Product Cards */
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
 .product-card {
   border: 2px solid var(--gray); border-radius: var(--radius-lg);
@@ -120,7 +118,7 @@ main { max-width: 900px; margin: 0 auto; padding: 36px 20px; }
 }
 .product-card.selected .product-check { opacity: 1; }
 
-/* ── FORM LAYOUT ── */
+/* Form Layout */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
 .form-group { display: flex; flex-direction: column; gap: 5px; }
 .form-group.span-2 { grid-column: span 2; }
@@ -137,7 +135,7 @@ input:focus, select:focus, textarea:focus {
 }
 .hint { font-size: 0.67rem; color: var(--muted); margin-top: 1px; }
 
-/* ── KES CURRENCY INPUT ── */
+/* KES Currency Input */
 .currency-wrap { position: relative; display: flex; align-items: stretch; }
 .currency-prefix {
   display: flex; align-items: center; padding: 0 10px;
@@ -152,7 +150,7 @@ input:focus, select:focus, textarea:focus {
 }
 .currency-wrap input:focus { border-color: var(--libertyblue); box-shadow: 0 0 0 3px rgba(17,39,96,0.10); }
 
-/* ── TOGGLE SECTION ── */
+/* Toggle Section */
 .toggle-row {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 14px; background: #f0f5fa;
@@ -179,14 +177,14 @@ input:focus, select:focus, textarea:focus {
 .toggle-content.open { display: block; }
 .toggle-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--libertyblue); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #c8dcea; }
 
-/* ── SUBSECTION LABEL ── */
+/* Subsection Label */
 .subsection-label {
   font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted);
   margin-bottom: 12px; margin-top: 4px;
 }
 
-/* ── BUTTONS ── */
+/* Buttons */
 .btn-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 .btn {
   padding: 9px 22px; border-radius: var(--radius);
@@ -204,10 +202,10 @@ input:focus, select:focus, textarea:focus {
 .btn-green:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: var(--shadow); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* ── DIVIDER ── */
+/* Divider */
 .divider { border: none; border-top: 1px solid var(--gray); margin: 22px 0; }
 
-/* ── LOADING STATE ── */
+/* Loading State */
 .loading-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(13,17,23,0.45); z-index: 200;
@@ -222,7 +220,7 @@ input:focus, select:focus, textarea:focus {
 .loading-msg { color: white; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── QUOTE SUMMARY ── */
+/* Quote Summary */
 .quote-header {
   background: var(--ink); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 26px 32px; color: white;
@@ -266,7 +264,7 @@ input:focus, select:focus, textarea:focus {
 .ph-freq { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
 .disclaimer { font-size: 0.67rem; color: var(--muted); background: var(--gray); border-radius: var(--radius); padding: 9px 12px; line-height: 1.5; margin-top: 8px; }
 
-/* ── TOAST ── */
+/* Toast */
 .toast {
   position: fixed; bottom: 24px; right: 24px;
   background: var(--ink); color: var(--white); padding: 10px 18px;
@@ -276,12 +274,12 @@ input:focus, select:focus, textarea:focus {
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 
-/* ── SCREEN TRANSITIONS ── */
+/* Screen Transitions */
 .screen { display: none; animation: fadeUp 0.3s ease; }
 .screen.active { display: block; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── PRINT ── */
+/* Print */
 @media print {
   header, .progress-bar, .btn-row, .no-print { display: none !important; }
   body { background: white; }
@@ -307,49 +305,45 @@ input:focus, select:focus, textarea:focus {
 
 <header>
   <div class="logo">Liberty <span>Life Assurance</span></div>
-  <div class="header-tag">Products Portal · Quote Engine v1.0</div>
+  <div class="header-tag">Products Portal &middot; Quote Engine v1.0</div>
 </header>
 
 <div class="progress-bar">
   <div class="step-pill active" id="pill-1"><span class="num">1</span> Select Product</div>
-  <div class="step-arrow">›</div>
+  <div class="step-arrow">&rsaquo;</div>
   <div class="step-pill" id="pill-2"><span class="num">2</span> Your Details</div>
-  <div class="step-arrow">›</div>
+  <div class="step-arrow">&rsaquo;</div>
   <div class="step-pill" id="pill-3"><span class="num">3</span> Quote Summary</div>
 </div>
 
 <!-- Loading overlay shown while awaiting Python response -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
-  <div class="loading-msg">Calculating your quote…</div>
+  <div class="loading-msg">Calculating your quote...</div>
 </div>
 
 <main>
 
-<!-- ════════════════════════════════════════════════════════
-     SCREEN 1 — PRODUCT SELECTION
-════════════════════════════════════════════════════════ -->
+<!-- Screen 1: Product Selection -->
 <div class="screen active" id="screen-1">
   <div class="section-title">Choose a Product Class</div>
   <div class="section-sub">Select the life assurance product you'd like to quote</div>
   <div class="product-grid" id="product-grid">
-    <!-- Cards injected by UI_buildProductGrid() in Section C -->
+    <!-- Cards injected by UI_buildProductGrid() in frontend/js/libertyquotes-ui.js -->
   </div>
   <div class="btn-row">
-    <button class="btn btn-primary" id="btn-next-1" onclick="UI_goToStep2()" disabled>Continue to Details →</button>
+    <button class="btn btn-primary" id="btn-next-1" onclick="UI_goToStep2()" disabled>Continue to Details &rarr;</button>
   </div>
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════
-     SCREEN 2 — DETAILS FORM
-════════════════════════════════════════════════════════ -->
+<!-- Screen 2: Details Form -->
 <div class="screen" id="screen-2">
   <div class="section-title" id="form-title">Your Details</div>
   <div class="section-sub">Fill in your information to generate a personalised quote</div>
 
-  <!-- ── Common personal details (always shown) ── -->
-  <div class="subsection-label">Main Life — Personal Details</div>
+  <!-- Common personal details (always shown) -->
+  <div class="subsection-label">Main Life - Personal Details</div>
   <div class="form-grid">
     <div class="form-group">
       <label>First Name <span style="color:#c0392b">*</span></label>
@@ -366,7 +360,7 @@ input:focus, select:focus, textarea:focus {
     <div class="form-group">
       <label>Gender <span style="color:#c0392b">*</span></label>
       <select id="f-gender">
-        <option value="">— select —</option>
+        <option value="">-- select --</option>
         <option value="M">Male</option>
         <option value="F">Female</option>
       </select>
@@ -403,12 +397,12 @@ input:focus, select:focus, textarea:focus {
 
   <hr class="divider">
 
-  <!-- ── Product-specific fields (injected by UI_buildProductFields()) ── -->
+  <!-- Product-specific fields (injected by UI_buildProductFields()) -->
   <div id="product-fields"></div>
 
   <hr class="divider">
 
-  <!-- ── Premium frequency ── -->
+  <!-- Premium frequency -->
   <div class="form-grid" style="margin-bottom: 0;">
     <div class="form-group">
       <label>Premium Frequency</label>
@@ -421,1130 +415,32 @@ input:focus, select:focus, textarea:focus {
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-outline" onclick="UI_goToStep1()">← Back</button>
-    <button class="btn btn-primary" onclick="UI_submitForQuote()">Generate Quote →</button>
+    <button class="btn btn-outline" onclick="UI_goToStep1()">&larr; Back</button>
+    <button class="btn btn-primary" onclick="UI_submitForQuote()">Generate Quote &rarr;</button>
   </div>
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════
-     SCREEN 3 — QUOTE SUMMARY
-════════════════════════════════════════════════════════ -->
+<!-- Screen 3: Quote Summary -->
 <div class="screen" id="screen-3">
   <div id="quote-container"></div>
   <div class="btn-row no-print" style="margin-top: 22px;">
-    <button class="btn btn-outline" onclick="UI_goToStep2()">← Edit Details</button>
-    <button class="btn btn-outline" onclick="UI_startOver()">⟳ New Quote</button>
-    <button class="btn btn-dark" onclick="window.print()">🖨️ Print Quote</button>
-    <button class="btn btn-green" onclick="UI_sendToSales()">✉️ Send to Sales</button>
+    <button class="btn btn-outline" onclick="UI_goToStep2()">&larr; Edit Details</button>
+    <button class="btn btn-outline" onclick="UI_startOver()">New Quote</button>
+    <button class="btn btn-dark" onclick="window.print()">Print Quote</button>
+    <button class="btn btn-green" onclick="UI_sendToSales()">Send to Sales</button>
   </div>
 </div>
 
 </main>
 <div class="toast" id="toast"></div>
 
-<script>
-"use strict";
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECTION A — PRODUCT CATALOGUE
-   ══════════════════════════════════════════════════════════════════════════════
-   This object defines what products exist, what fields are shown on the form,
-   and which optional toggles are available.
-
-   TO ADD A NEW PRODUCT:
-     1. Maintain product definitions in backend/productspecs.py.
-     2. Frontend pulls product display and limits from /productspecs.
-     3. FIELD_TEMPLATES handles visual field markup only.
-
-   TO EDIT AN EXISTING PRODUCT (e.g. change the term range):
-     Modify backend/productspecs.py, then reload the frontend.
-
-   FIELDS REFERENCE:
-     fields[]         — array of field IDs rendered in the product-specific section.
-                        Each ID maps to a template in FIELD_TEMPLATES below.
-     hasPartialMat    — show the "Partial Maturities" toggle (term life, education)
-     hasJointLife     — show the "Joint Life" toggle (term, wholelife, education)
-══════════════════════════════════════════════════════════════════════════════ */
-const PRODUCT_SPECS_ENDPOINT = "http://localhost:5050/productspecs";
-const PRODUCT_ICON_BY_CATEGORY = {
-  protection:            'Protection',
-  protection_with_value: 'Whole Life',
-  savings:               'Savings',
-  participating:         'With Profit',
-  retirement:            'Retirement',
-  goal_savings:          'Education',
-};
-const SPEC_TO_TEMPLATE_FIELD = {
-  sa:        'sum-assured',
-  term:      'term',
-  escalationRate: 'escalation-rate',
-  contrib:   'contribution',
-  retireAge: 'retirement-age',
-  target:    'target-amount',
-  childName: 'child-name',
-  childDob:  'child-dob',
-};
-const SPEC_TO_INPUT_ID = {
-  age:       'f-dob',
-  sa:        'f-sa',
-  term:      'f-term',
-  escalationRate: 'f-escalation',
-  contrib:   'f-contrib',
-  retireAge: 'f-retire',
-  target:    'f-target',
-};
-let _specData = { brands: {}, fields: {}, products: {} };
-
-/*
-   FIELD TEMPLATES — HTML snippets for each reusable form field.
-   To change min/max/default values on a monetary field, edit the
-   data-min / data-max attributes and the placeholder text here.
-*/
-const FIELD_TEMPLATES = {
-
-  /* Sum Assured — KES currency input */
-  'sum-assured': `
-    <div class="form-group">
-      <label>Sum Assured (KES) <span style="color:#c0392b">*</span></label>
-      <div class="currency-wrap">
-        <span class="currency-prefix">KES</span>
-        <input type="number" id="f-sa" min="100000" max="10000000" step="50000"
-          placeholder="500,000" value=""
-          oninput="UI_formatCurrencyInput(this)" />
-      </div>
-      <span class="hint">Minimum KES 100,000 · Maximum KES 10,000,000</span>
-    </div>`,
-
-  /* Policy term in years */
-  'term': `
-    <div class="form-group">
-      <label>Policy Term (Years) <span style="color:#c0392b">*</span></label>
-      <input type="number" id="f-term" min="5" max="35" step="1" placeholder="e.g. 15" />
-      <span class="hint">Between 5 and 35 years</span>
-    </div>`,
-
-  /* Annual sum assured escalation rate */
-  'escalation-rate': `
-    <div class="form-group">
-      <label>Escalation Rate (% p.a.) <span style="color:#c0392b">*</span></label>
-      <input type="number" id="f-escalation" min="0" max="20" step="0.5" placeholder="e.g. 5" />
-      <span class="hint">Compounding annual increase in sum assured</span>
-    </div>`,
-
-  /* Monthly pension contribution */
-  'contribution': `
-    <div class="form-group">
-      <label>Monthly Pension Contribution (KES) <span style="color:#c0392b">*</span></label>
-      <div class="currency-wrap">
-        <span class="currency-prefix">KES</span>
-        <input type="number" id="f-contrib" min="2000" max="200000" step="500"
-          placeholder="10,000" value=""
-          oninput="UI_formatCurrencyInput(this)" />
-      </div>
-      <span class="hint">Minimum KES 2,000/month</span>
-    </div>`,
-
-  /* Retirement age selector */
-  'retirement-age': `
-    <div class="form-group">
-      <label>Target Retirement Age</label>
-      <select id="f-retire">
-        <option value="55">55 years</option>
-        <option value="60" selected>60 years</option>
-        <option value="65">65 years</option>
-      </select>
-    </div>`,
-
-  /* Target education fund */
-  'target-amount': `
-    <div class="form-group">
-      <label>Target Education Fund (KES) <span style="color:#c0392b">*</span></label>
-      <div class="currency-wrap">
-        <span class="currency-prefix">KES</span>
-        <input type="number" id="f-target" min="200000" max="5000000" step="100000"
-          placeholder="1,000,000" value=""
-          oninput="UI_formatCurrencyInput(this)" />
-      </div>
-      <span class="hint">Minimum KES 200,000 · Maximum KES 5,000,000</span>
-    </div>`,
-
-  /* Child details */
-  'child-name': `
-    <div class="form-group">
-      <label>Child's Name</label>
-      <input type="text" id="f-childname" placeholder="e.g. Zawadi Ochieng" />
-    </div>`,
-  'child-dob': `
-    <div class="form-group">
-      <label>Child's Date of Birth</label>
-      <input type="date" id="f-childdob" />
-    </div>`,
-};
-
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECTION B — CALCULATION ENGINE
-   ══════════════════════════════════════════════════════════════════════════════
-   This section is the ONLY place that produces premium figures and benefit
-   lists. The UI (Section C) only reads from this section — it never does
-   any arithmetic itself.
-
-   CURRENT SOURCE: Python script (called via fetch to a local HTTP endpoint).
-
-   ──────────────────────────────────────────────────────────────────────────
-   HOW TO SWITCH CALCULATION SOURCE
-   ──────────────────────────────────────────────────────────────────────────
-
-   OPTION 1 — Python / R script (current, active)
-     Run a small Flask or FastAPI server alongside this HTML file.
-     The server exposes POST /quote and accepts the payload below.
-     To switch from Python to R, the server-side changes; the JS stays the same.
-
-     Minimal Flask example (save as quote_server.py):
-     ┌─────────────────────────────────────────────────────────┐
-     │  from flask import Flask, request, jsonify              │
-     │  from flask_cors import CORS                            │
-     │  app = Flask(__name__)                                  │
-     │  CORS(app)                                              │
-     │  @app.route('/quote', methods=['POST'])                 │
-     │  def quote():                                           │
-     │      data = request.json                               │
-     │      # call your actuarial script here                  │
-     │      return jsonify({ "premium": ..., "benefits": [...] })│
-     │  app.run(port=5050)                                     │
-     └─────────────────────────────────────────────────────────┘
-     Then set PYTHON_ENDPOINT below to "http://localhost:5050/quote".
-
-   OPTION 2 — Excel workbook (commented out below)
-     Connect via a backend proxy that opens the workbook with xlwings or
-     openpyxl and reads named ranges, OR use SheetJS in the browser to
-     parse a locally-loaded .xlsx file.
-     See the commented block EXCEL_ENGINE below.
-
-   OPTION 3 — Python fallback endpoint (for offline/demo use)
-     The Python fallback endpoint below runs if the primary Python endpoint is unreachable.
-     It uses simplified illustrative rates. Clearly labelled as illustrative.
-══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── B1: Endpoint configuration ── */
-
-/**
- * PYTHON_ENDPOINT — URL of the Python/R calculation server.
- * Change this to match where your script is running.
- * e.g. "http://localhost:5050/quote"  (local Flask/FastAPI)
- *      "https://your-server.com/api/quote"  (hosted)
- */
-const PYTHON_ENDPOINT = "http://localhost:5050/quote";
-
-/**
- * USE_PYTHON_ENGINE — set to true to call the Python server.
- * Set to false to always use the Python fallback endpoint (demo/offline mode).
- */
-const USE_PYTHON_ENGINE = true;
-const PYTHON_FALLBACK_ENDPOINT = "http://localhost:5050/quote/fallback";
-
-/* ── B2: Main entry point called by the UI ── */
-
-/**
- * CALC_getQuote(payload) → Promise<QuoteResult>
- *
- * Payload sent to the engine (Python endpoints):
- * {
- *   product:            string   e.g. "term"
- *   age:                number   main life age at entry
- *   gender:             "M"|"F"
- *   smoker:             "S"|"NS"
- *   term:               number|null  years (null for whole-life / pension)
- *   sa:                 number|null  sum assured in KES
- *   escalationRate:     number|null  annual sum assured escalation (%)
- *   contribution:       number|null  monthly contribution (pension)
- *   target:             number|null  target fund (education)
- *   retireAge:          number|null  target retirement age (pension)
- *   freq:               "monthly"|"quarterly"|"annually"
- *   partialMat:         { enabled: bool, count: number }
- *   jointLife:          { enabled: bool, age, gender, name, dob, email, phone }
- * }
- *
- * Expected response shape from Python server:
- * {
- *   premium:            number   (in the chosen frequency unit)
- *   benefits:           Array<{ risk: string, coverage: string, note: string, highlight: bool }>
- *   freeBenefits:       string[]
- *   note:               string   (disclaimer / projection note)
- *   details:            Array<[label, value]>  (policy parameters for the summary)
- * }
- */
-async function _parseQuoteResponse(resp, endpointLabel) {
-  if (resp.ok) return await resp.json();
-
-  let errPayload = {};
-  try {
-    errPayload = await resp.json();
-  } catch (_ignored) {
-    errPayload = {};
-  }
-
-  const msg = errPayload.error || (endpointLabel + ' responded ' + resp.status);
-  const err = new Error(msg);
-  err.status = resp.status;
-  err.validationMessages = Array.isArray(errPayload.messages) ? errPayload.messages : [];
-  err.isValidationError = resp.status === 400;
-  throw err;
-}
-
-async function CALC_getQuote(payload) {
-  if (USE_PYTHON_ENGINE) {
-    try {
-      const resp = await fetch(PYTHON_ENDPOINT, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-        signal:  AbortSignal.timeout(12000),
-      });
-      return await _parseQuoteResponse(resp, 'Primary server');
-    } catch (err) {
-      if (err.isValidationError) throw err;
-      console.warn('[QuoteEngine] Primary Python endpoint unreachable; trying Python fallback.', err.message);
-      showToast('Primary engine unavailable - using Python fallback estimates');
-      return CALC_getPythonFallbackQuote(payload);
-    }
-  }
-
-  return CALC_getPythonFallbackQuote(payload);
-}
-
-async function CALC_getPythonFallbackQuote(payload) {
-  const resp = await fetch(PYTHON_FALLBACK_ENDPOINT, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload),
-    signal:  AbortSignal.timeout(12000),
-  });
-
-  return _parseQuoteResponse(resp, 'Fallback server');
-}
-
-
-/* ─────────────────────────────────────────────────────────────────────────
-   EXCEL ENGINE (commented out — uncomment to enable)
-   ─────────────────────────────────────────────────────────────────────────
-   Two integration patterns are shown:
-
-   PATTERN A — Browser-side via SheetJS (user uploads the workbook):
-     The user selects the Excel file; SheetJS reads named ranges / cells.
-     Best for: demos, ad-hoc use without a server.
-
-   PATTERN B — Server-side via Python/xlwings (recommended for production):
-     Your Flask server opens the workbook, writes inputs to named cells,
-     triggers recalculation, reads output cells, and returns JSON.
-     The PYTHON_ENDPOINT already handles this if your server is wired to Excel.
-
-   ── PATTERN A STUB (SheetJS) ──────────────────────────────────────────
-   const EXCEL_FILE_URL = 'soma_rates.xlsx'; // or use a file input
-
-   async function EXCEL_ENGINE(payload) {
-     // Load the workbook (either via URL fetch or FileReader from <input type="file">)
-     const response = await fetch(EXCEL_FILE_URL);
-     const arrayBuffer = await response.arrayBuffer();
-     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-     // Write inputs to named cells
-     // TO CUSTOMISE: change 'Inputs' to your sheet name; 'B2','B3'… to your cell refs
-     const inputSheet = workbook.Sheets['Premium Calculation'];
-     inputSheet['B2'] = { v: payload.age,    t: 'n' };  // Age at entry
-     inputSheet['F12'] = { v: payload.gender, t: 's' };  // Gender
-     inputSheet['F14'] = { v: payload.sa,     t: 'n' };  // Sum assured
-     inputSheet['F13'] = { v: payload.term,   t: 'n' };  // Term (years)
-     inputSheet['F16'] = { v: payload.escalationRate,    t: 'n' };  // Sum Assured Escalation Rate
-     inputSheet['F12'] = { v: payload.gender, t: 's' };  // Gender
-     inputSheet['F14'] = { v: payload.sa,     t: 'n' };  // Sum assured
-     inputSheet['F13'] = { v: payload.term,   t: 'n' };  // Term (years)
-     // Add more input cells as needed …
-
-     // SheetJS does NOT recalculate formulas — you must read pre-computed output cells
-     // OR use a server-side xlwings approach for live formula evaluation.
-
-     // Read output cells
-     // TO CUSTOMISE: change 'Outputs' to your sheet name; 'C2','C3'… to your cell refs
-     const outSheet = workbook.Sheets['Outputs'];
-     const premium  = outSheet['C2']?.v ?? 0;  // Monthly premium
-     // … read additional benefit cells …
-
-     return {
-       premium,
-       benefits:     [ { risk: 'Death Benefit', coverage: 'KES ' + payload.sa?.toLocaleString(), note: '', highlight: true } ],
-       freeBenefits: [],
-       note: 'Figures read from Excel workbook.',
-       details: [],
-     };
-   }
-   ─────────────────────────────────────────────────────────────────────── */
-
-/* B3 removed: JS_FALLBACK_ENGINE has been replaced by premiums.py via PYTHON_FALLBACK_ENDPOINT. */
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECTION C — UI LOGIC
-   ══════════════════════════════════════════════════════════════════════════════
-   All DOM manipulation, navigation, form building, and input handling lives
-   here. This section NEVER performs premium calculations — it only:
-     (a) collects inputs and assembles the payload for Section B, and
-     (b) passes the result from Section B to the renderer in Section D.
-══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── C1: Application state ── */
-/* C1: Application state */
-let _selectedProduct = null;
-let _quoteData       = {};
-
-/* C2: Initialisation */
-document.addEventListener('DOMContentLoaded', async () => {
-  await UI_loadProductSpecs();
-  UI_buildProductGrid();
-  UI_wireCommonValidation();
-});
-
-async function UI_loadProductSpecs() {
-  try {
-    const resp = await fetch(PRODUCT_SPECS_ENDPOINT, { signal: AbortSignal.timeout(12000) });
-    if (!resp.ok) throw new Error('Productspec server responded ' + resp.status);
-    const data = await resp.json();
-    if (!data || !data.products || Object.keys(data.products).length === 0) {
-      throw new Error('No productspec data returned.');
-    }
-    _specData = data;
-  } catch (err) {
-    console.error('[Productspecs]', err.message);
-    showToast('Unable to load product specifications from backend. Start quote_server.py.');
-    _specData = { brands: {}, fields: {}, products: {} };
-  }
-}
-
-function _getProductSpec(product) {
-  return _specData.products?.[product] || null;
-}
-
-function _getProductView(product) {
-  const spec = _getProductSpec(product) || {};
-  return {
-    label: spec.display_name || product,
-    desc:  spec.description || '',
-    icon:  PRODUCT_ICON_BY_CATEGORY[spec.category] || 'Product',
-  };
-}
-
-function _getProductTemplateFields(spec) {
-  const orderedSpecFields = ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target', 'childName', 'childDob'];
-  const allFields = new Set([...(spec.required_fields || []), ...(spec.optional_fields || [])]);
-  return orderedSpecFields
-    .filter(field => allFields.has(field))
-    .map(field => SPEC_TO_TEMPLATE_FIELD[field])
-    .filter(Boolean);
-}
-
-function UI_buildProductGrid() {
-  const grid = document.getElementById('product-grid');
-  const products = Object.entries(_specData.products || {});
-
-  if (!products.length) {
-    grid.innerHTML = '<div class="section-sub">No products available. Check backend /productspecs endpoint.</div>';
-    return;
-  }
-
-  grid.innerHTML = products.map(([key, spec]) => {
-    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || 'Product';
-    return `
-      <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
-        <div class="product-check">v</div>
-        <span class="product-icon">${icon}</span>
-        <div class="product-name">${spec.display_name}</div>
-        <div class="product-desc">${spec.description || ''}</div>
-      </div>`;
-  }).join('');
-}
-
-/* C3: Navigation */
-function UI_selectProduct(card) {
-  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  _selectedProduct = card.dataset.product;
-  document.getElementById('btn-next-1').disabled = false;
-  _clearFieldError('f-dob');
-}
-
-function UI_goToStep1() { _setScreen(1); }
-
-function UI_goToStep2() {
-  if (!_selectedProduct) return;
-  const view = _getProductView(_selectedProduct);
-  _buildProductFields(_selectedProduct);
-  document.getElementById('form-title').textContent = view.label + ' - Your Details';
-  _setScreen(2);
-}
-
-function UI_startOver() {
-  _selectedProduct = null;
-  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('btn-next-1').disabled = true;
-  _setScreen(1);
-}
-
-function _setScreen(n) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + n).classList.add('active');
-  ['pill-1','pill-2','pill-3'].forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.classList.remove('active','done');
-    if (i+1 === n) el.classList.add('active');
-    else if (i+1 < n) el.classList.add('done');
-  });
-  window.scrollTo({ top:0, behavior:'smooth' });
-}
-
-/* C4: Form builder */
-function _buildProductFields(product) {
-  const spec      = _getProductSpec(product);
-  const container = document.getElementById('product-fields');
-  if (!spec) {
-    container.innerHTML = '<div class="section-sub">Unable to load product specification.</div>';
-    return;
-  }
-
-  const templateFields = _getProductTemplateFields(spec);
-
-  let html = `<div class="subsection-label">Product Details</div><div class="form-grid">`;
-  templateFields.forEach(fid => { html += FIELD_TEMPLATES[fid] || ''; });
-  html += `</div>`;
-
-  if ((spec.optional_fields || []).includes('partialMat.enabled')) {
-    html += `
-    <div class="toggle-row" onclick="UI_toggleSection('partial-mat-content','partial-mat-switch')">
-      <div>
-        <div class="toggle-label">Partial Maturities</div>
-        <div class="toggle-sub">Allow partial payouts before full maturity</div>
-      </div>
-      <div class="toggle-switch" id="partial-mat-switch"></div>
-    </div>
-    <div class="toggle-content" id="partial-mat-content">
-      <div class="toggle-section-title">Partial Maturity Configuration</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Number of Partial Maturities</label>
-          <input type="number" id="f-partial-count" min="1" max="10" step="1" placeholder="e.g. 3" />
-          <span class="hint">Each payout typically equals a set % of the sum assured</span>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  if ((spec.optional_fields || []).includes('jointLife.enabled')) {
-    html += `
-    <div class="toggle-row" onclick="UI_toggleSection('joint-life-content','joint-life-switch')">
-      <div>
-        <div class="toggle-label">Joint Life Cover</div>
-        <div class="toggle-sub">Add a second life to this policy</div>
-      </div>
-      <div class="toggle-switch" id="joint-life-switch"></div>
-    </div>
-    <div class="toggle-content" id="joint-life-content">
-      <div class="toggle-section-title">Second Life - Personal Details</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="f-jl-name" placeholder="e.g. Kendi Ochieng" />
-        </div>
-        <div class="form-group">
-          <label>Date of Birth</label>
-          <input type="date" id="f-jl-dob" />
-        </div>
-        <div class="form-group">
-          <label>Gender</label>
-          <select id="f-jl-gender">
-            <option value="">-- select --</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="f-jl-email" placeholder="e.g. kendi@example.com" />
-        </div>
-        <div class="form-group">
-          <label>Phone Number</label>
-          <input type="tel" id="f-jl-phone" placeholder="e.g. +254 7XX XXX XXX" />
-        </div>
-      </div>
-    </div>`;
-  }
-
-  container.innerHTML = html;
-  _applyProductConstraints(spec);
-  UI_wireProductValidation(spec);
-}
-
-/* C5: Toggle helper */
-function UI_toggleSection(contentId, switchId) {
-  const content  = document.getElementById(contentId);
-  const sw       = document.getElementById(switchId);
-  if (!content || !sw) return;
-  const isOpen = content.classList.contains('open');
-  content.classList.toggle('open', !isOpen);
-  sw.classList.toggle('on', !isOpen);
-}
-
-/* C6: Currency input formatter */
-function UI_formatCurrencyInput(input) {
-  let raw = input.value.replace(/[^0-9]/g, '');
-  input.value = raw ? parseInt(raw, 10) : '';
-}
-
-function UI_wireCommonValidation() {
-  const dobInput = document.getElementById('f-dob');
-  if (dobInput) {
-    ['input', 'change', 'blur'].forEach(evt => {
-      dobInput.addEventListener(evt, () => _validateAgeField(_getProductSpec(_selectedProduct), false));
-    });
-  }
-}
-
-function UI_wireProductValidation(spec) {
-  ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target'].forEach(field => {
-    const id = SPEC_TO_INPUT_ID[field];
-    const input = document.getElementById(id);
-    if (!input) return;
-    ['input', 'change', 'blur'].forEach(evt => {
-      input.addEventListener(evt, () => _validateNumericField(field, spec, false));
-    });
-  });
-}
-
-function _applyProductConstraints(spec) {
-  if (!spec) return;
-
-  const ageRange = spec.allowed_entry_age || [18, 70];
-  const dobInput = document.getElementById('f-dob');
-  if (dobInput) {
-    const [minAge, maxAge] = ageRange;
-    const bounds = _getDobBounds(minAge, maxAge);
-    dobInput.min = bounds.minDate;
-    dobInput.max = bounds.maxDate;
-    dobInput.dataset.minAge = String(minAge);
-    dobInput.dataset.maxAge = String(maxAge);
-  }
-
-  const termInput = document.getElementById('f-term');
-  if (termInput) {
-    const termRange = spec.allowed_term_years || [_fieldMin('term'), _fieldMax('term')];
-    if (termRange[0] != null) termInput.min = termRange[0];
-    if (termRange[1] != null) termInput.max = termRange[1];
-  }
-
-  _applyFinancialLimit('sa', 'f-sa', spec);
-  _applyFinancialLimit('escalationRate', 'f-escalation', spec);
-  _applyFinancialLimit('target', 'f-target', spec);
-  _applyFinancialLimit('contrib', 'f-contrib', spec);
-
-  const retireInput = document.getElementById('f-retire');
-  if (retireInput) {
-    const min = _fieldMin('retireAge');
-    const max = _fieldMax('retireAge');
-    if (min != null) retireInput.min = min;
-    if (max != null) retireInput.max = max;
-  }
-}
-
-function _fieldMin(field) {
-  return _specData.fields?.[field]?.minimum ?? null;
-}
-
-function _fieldMax(field) {
-  return _specData.fields?.[field]?.maximum ?? null;
-}
-
-function _applyFinancialLimit(field, inputId, spec) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const financial = spec.financial_limits?.[field] || [null, null];
-  const min = financial[0] != null ? financial[0] : _fieldMin(field);
-  const max = financial[1] != null ? financial[1] : _fieldMax(field);
-  if (min != null) input.min = min;
-  if (max != null) input.max = max;
-}
-
-function _getDobBounds(minAge, maxAge) {
-  const today = new Date();
-  const maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
-  const minDate = new Date(today.getFullYear() - maxAge, today.getMonth(), today.getDate());
-  return { minDate: _toYMD(minDate), maxDate: _toYMD(maxDate) };
-}
-
-function _toYMD(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function _setFieldError(inputId, message) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const group = input.closest('.form-group') || input.parentElement;
-  if (!group) return;
-
-  let el = group.querySelector(`.field-error[data-for="${inputId}"]`);
-  if (!message) {
-    if (el) el.remove();
-    return;
-  }
-  if (!el) {
-    el = document.createElement('span');
-    el.className = 'hint field-error';
-    el.dataset.for = inputId;
-    el.style.color = '#c0392b';
-    group.appendChild(el);
-  }
-  el.textContent = message;
-}
-
-function _clearFieldError(inputId) {
-  _setFieldError(inputId, '');
-}
-
-function _validateAgeField(spec, silent) {
-  const dob = document.getElementById('f-dob')?.value;
-  if (!dob) return true;
-  if (!spec) return true;
-
-  const age = _calcAge(dob);
-  const [minAge, maxAge] = spec.allowed_entry_age || [18, 70];
-  if (age < minAge || age > maxAge) {
-    const msg = `Entry age must be between ${minAge} and ${maxAge} for this product.`;
-    if (!silent) _setFieldError('f-dob', msg);
-    return false;
-  }
-  _clearFieldError('f-dob');
-  return true;
-}
-
-function _validateNumericField(field, spec, silent) {
-  const inputId = SPEC_TO_INPUT_ID[field];
-  const input = document.getElementById(inputId);
-  if (!input || !spec) return true;
-
-  const required = (spec.required_fields || []).includes(field);
-  const value = _safeNum(inputId);
-  if (required && (value == null)) {
-    const msg = `This field is required.`;
-    if (!silent) _setFieldError(inputId, msg);
-    return false;
-  }
-  if (value == null) {
-    _clearFieldError(inputId);
-    return true;
-  }
-
-  let min = null;
-  let max = null;
-
-  if (field === 'term' && spec.allowed_term_years) {
-    min = spec.allowed_term_years[0];
-    max = spec.allowed_term_years[1];
-  } else if (spec.financial_limits?.[field]) {
-    min = spec.financial_limits[field][0];
-    max = spec.financial_limits[field][1];
-  } else {
-    min = _fieldMin(field);
-    max = _fieldMax(field);
-  }
-
-  if (min != null && value < min) {
-    if (!silent) _setFieldError(inputId, `Minimum allowed is ${min}.`);
-    return false;
-  }
-  if (max != null && value > max) {
-    if (!silent) _setFieldError(inputId, `Maximum allowed is ${max}.`);
-    return false;
-  }
-
-  _clearFieldError(inputId);
-  return true;
-}
-
-function UI_applyBackendValidationMessages(messages) {
-  messages.forEach(msg => {
-    const requiredMatch = msg.match(/^Missing required field:\s*(.+)$/);
-    if (requiredMatch) {
-      const field = requiredMatch[1].trim();
-      const inputId = SPEC_TO_INPUT_ID[field];
-      if (inputId) _setFieldError(inputId, 'This field is required.');
-      return;
-    }
-
-    if (msg.toLowerCase().includes('entry age must be between')) {
-      _setFieldError('f-dob', msg);
-      return;
-    }
-    if (msg.toLowerCase().startsWith('term must be between')) {
-      _setFieldError('f-term', msg);
-      return;
-    }
-    if (msg.toLowerCase().startsWith('sa must')) {
-      _setFieldError('f-sa', msg);
-      return;
-    }
-    if (msg.toLowerCase().startsWith('escalationrate must')) {
-      _setFieldError('f-escalation', msg);
-      return;
-    }
-    if (msg.toLowerCase().startsWith('target must')) {
-      _setFieldError('f-target', msg);
-      return;
-    }
-    if (msg.toLowerCase().startsWith('contrib must')) {
-      _setFieldError('f-contrib', msg);
-      return;
-    }
-  });
-}
-
-function UI_validateBeforeSubmit(spec) {
-  let ok = true;
-
-  const requiredCommon = [
-    ['f-firstname', 'First name is required.'],
-    ['f-lastname', 'Last name is required.'],
-    ['f-dob', 'Date of birth is required.'],
-    ['f-gender', 'Gender is required.'],
-    ['f-email', 'Email is required.'],
-    ['f-occupation', 'Occupation is required.'],
-  ];
-
-  requiredCommon.forEach(([id, msg]) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (!String(el.value || '').trim()) {
-      _setFieldError(id, msg);
-      ok = false;
-    }
-  });
-
-  if (!_validateAgeField(spec, false)) ok = false;
-
-  ['sa', 'term', 'escalationRate', 'contrib', 'retireAge', 'target'].forEach(field => {
-    if (!_validateNumericField(field, spec, false)) ok = false;
-  });
-
-  const partialEnabled = document.getElementById('partial-mat-content')?.classList.contains('open') || false;
-  const partialCount = _safeNum('f-partial-count');
-  if (partialEnabled && (partialCount == null || partialCount < 1 || partialCount > 10)) {
-    _setFieldError('f-partial-count', 'Partial maturities must be between 1 and 10.');
-    ok = false;
-  }
-
-  return ok;
-}
-
-/* C7: Collect inputs and call the engine */
-async function UI_submitForQuote() {
-  const spec = _getProductSpec(_selectedProduct);
-  if (!spec) {
-    showToast('No specification loaded for selected product.');
-    return;
-  }
-
-  if (!UI_validateBeforeSubmit(spec)) {
-    showToast('Please correct highlighted validation errors.');
-    return;
-  }
-
-  const firstname  = document.getElementById('f-firstname').value.trim();
-  const lastname   = document.getElementById('f-lastname').value.trim();
-  const dob        = document.getElementById('f-dob').value;
-  const gender     = document.getElementById('f-gender').value;
-  const email      = document.getElementById('f-email').value.trim();
-  const smoker     = document.getElementById('f-smoker').value;
-  const occupation = document.getElementById('f-occupation').value.trim();
-  const employer   = document.getElementById('f-employer').value.trim();
-  const phone      = document.getElementById('f-phone').value.trim();
-  const idno       = document.getElementById('f-idno').value.trim();
-  const freq       = document.getElementById('f-freq').value;
-  const age        = _calcAge(dob);
-
-  const sa        = _safeNum('f-sa');
-  const term      = _safeNum('f-term');
-  const escalationRate = _safeNum('f-escalation');
-  const contrib   = _safeNum('f-contrib');
-  const retireAge = _safeNum('f-retire');
-  const target    = _safeNum('f-target');
-  const childName = document.getElementById('f-childname')?.value.trim() || '';
-  const childDob  = document.getElementById('f-childdob')?.value || '';
-
-  const partialEnabled = document.getElementById('partial-mat-content')?.classList.contains('open') || false;
-  const partialCount   = _safeNum('f-partial-count') || 0;
-  const partialMat     = { enabled: partialEnabled, count: partialCount };
-
-  const jlEnabled = document.getElementById('joint-life-content')?.classList.contains('open') || false;
-  const jointLife = {
-    enabled: jlEnabled,
-    name:    document.getElementById('f-jl-name')?.value.trim()   || '',
-    dob:     document.getElementById('f-jl-dob')?.value           || '',
-    gender:  document.getElementById('f-jl-gender')?.value        || '',
-    email:   document.getElementById('f-jl-email')?.value.trim()  || '',
-    phone:   document.getElementById('f-jl-phone')?.value.trim()  || '',
-  };
-  if (jlEnabled && jointLife.dob) {
-    jointLife.age = _calcAge(jointLife.dob);
-  }
-
-  const payload = {
-    product: _selectedProduct,
-    age, dob, gender, smoker, freq,
-    sa:         sa        || null,
-    term:       term      || null,
-    escalationRate: escalationRate || null,
-    contrib:    contrib   || null,
-    retireAge:  retireAge || null,
-    target:     target    || null,
-    childName, childDob,
-    partialMat, jointLife,
-  };
-
-  document.getElementById('loading-overlay').classList.add('show');
-  let result;
-  try {
-    result = await CALC_getQuote(payload);
-  } catch (err) {
-    if (Array.isArray(err.validationMessages) && err.validationMessages.length) {
-      UI_applyBackendValidationMessages(err.validationMessages);
-      showToast(err.validationMessages[0]);
-    } else {
-      showToast(err.message || 'Unable to generate quote at this time.');
-    }
-    return;
-  } finally {
-    document.getElementById('loading-overlay').classList.remove('show');
-  }
-
-  const ref    = _makeRef();
-  const today  = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' });
-  const person = { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno };
-
-  document.getElementById('quote-container').innerHTML =
-    RENDER_quoteHTML({ ref, today, product: _selectedProduct, person, freq, result, jointLife, partialMat });
-
-  _quoteData = {
-    ref, today, person, product: _selectedProduct, freq, result, jointLife, partialMat,
-    emailBody: _buildEmailBody({ ref, today, person, product: _selectedProduct, freq, result, jointLife, partialMat }),
-  };
-  _setScreen(3);
-}
-
-/* C8: Small helpers */
-function _safeNum(id) {
-  const el = document.getElementById(id);
-  if (!el) return null;
-  const v = parseFloat(el.value);
-  return isNaN(v) ? null : v;
-}
-function _calcAge(dob) {
-  const today = new Date(), bd = new Date(dob);
-  let age = today.getFullYear() - bd.getFullYear();
-  const m = today.getMonth() - bd.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
-  return age;
-}
-function _makeRef() { return 'LIQ-' + Date.now().toString(36).toUpperCase().slice(-7); }
-
-function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife, partialMat }) {
-  const { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno } = person;
-  const { premium, benefits, freeBenefits, note, details } = result;
-  const cfg        = _getProductView(product);
-  const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
-  const gLabel     = { M:'Male', F:'Female' }[gender] || gender;
-  const sLabel     = smoker === 'S' ? 'Smoker' : 'Non-Smoker';
-
-  const detailRows = (details || []).map(([l,v]) =>
-    `<div class="info-row"><span class="info-label">${l}</span><span class="info-val">${v}</span></div>`
-  ).join('');
-
-  const benefitCards = benefits.map(b => `
-    <div class="benefit-card">
-      <div class="bc-label">${b.risk}</div>
-      <div class="bc-val ${b.highlight ? 'highlight' : ''}">${b.coverage}</div>
-      <div class="bc-note">${b.note || ''}</div>
-    </div>`).join('');
-
-  const freeBadges = (freeBenefits || []).map(f =>
-    `<span class="free-benefit-badge">✓ ${f}</span>`).join('');
-
-  /* Joint life summary row */
-  const jlRow = (jointLife?.enabled && jointLife.name) ? `
-    <div class="info-row" style="background:#f0f5fa;padding:6px 10px;border-radius:3px;margin-top:6px;">
-      <span class="info-label">Joint Life</span>
-      <span class="info-val">${jointLife.name}${jointLife.age ? ' · Age '+jointLife.age : ''}${jointLife.gender ? ' · '+({ M:'M', F:'F' }[jointLife.gender]||'') : ''}</span>
-    </div>` : '';
-
-  /* Partial maturity summary row */
-  const pmRow = (partialMat?.enabled && partialMat.count > 0) ? `
-    <div class="info-row">
-      <span class="info-label">Partial Maturities</span>
-      <span class="info-val">${partialMat.count} instalments</span>
-    </div>` : '';
-
-  return `
-  <div class="quote-header">
-    <div>
-      <div class="qh-label">Official Quote — Illustrative</div>
-      <div class="qh-product">${cfg.label}</div>
-      <div class="qh-sub">Prepared for ${firstname} ${lastname} &middot; ${today}</div>
-    </div>
-    <div class="quote-ref">
-      <span>Quote Reference</span>
-      <strong>${ref}</strong>
-      <div style="margin-top:5px;font-size:0.62rem;color:#556677;">Valid for 30 days</div>
-    </div>
-  </div>
-  <div class="quote-body">
-
-    <div class="quote-section">
-      <div class="qs-title">Policyholder Details</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-        <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">${firstname} ${lastname}</span></div>
-        <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-val">${new Date(dob).toLocaleDateString('en-GB')}</span></div>
-        <div class="info-row"><span class="info-label">Age at Entry</span><span class="info-val">${age} yrs</span></div>
-        <div class="info-row"><span class="info-label">Gender</span><span class="info-val">${gLabel}</span></div>
-        <div class="info-row"><span class="info-label">Smoker Status</span><span class="info-val">${sLabel}</span></div>
-        <div class="info-row"><span class="info-label">Occupation</span><span class="info-val">${occupation}</span></div>
-        ${employer ? `<div class="info-row"><span class="info-label">Employer</span><span class="info-val">${employer}</span></div>` : ''}
-        <div class="info-row"><span class="info-label">Email</span><span class="info-val" style="font-size:0.72rem">${email}</span></div>
-        <div class="info-row"><span class="info-label">Phone</span><span class="info-val">${phone || '—'}</span></div>
-        <div class="info-row"><span class="info-label">ID / Passport</span><span class="info-val">${idno || '—'}</span></div>
-        ${jlRow}
-      </div>
-    </div>
-
-    <div class="quote-section">
-      <div class="qs-title">Policy Parameters</div>
-      ${detailRows}
-      ${pmRow}
-    </div>
-
-    <div class="quote-section">
-      <div class="premium-highlight">
-        <div>
-          <div class="ph-label">${freqLabel} Premium</div>
-          <div class="ph-freq">${freqLabel} payment &middot; auto-debit available</div>
-        </div>
-        <div class="ph-val">KES ${premium.toLocaleString()}</div>
-      </div>
-    </div>
-
-    <div class="quote-section">
-      <div class="qs-title">Key Benefits (Risk — Coverage)</div>
-      <div class="benefit-grid">${benefitCards}</div>
-    </div>
-
-    ${freeBadges ? `
-    <div class="quote-section">
-      <div class="qs-title">Complimentary Benefits</div>
-      <div style="margin-top:4px">${freeBadges}</div>
-    </div>` : ''}
-
-    <div class="quote-section">
-      <div class="qs-title">Important Notes</div>
-      <div class="disclaimer">
-        ⚠️ ${note || ''} All figures are illustrative estimates for discussion only and do not constitute a binding offer.
-        Final premiums and benefits are subject to full underwriting and acceptance.
-        Occupation class will be assigned during underwriting.
-        This quote is valid for 30 days from issue. Ref: <strong>${ref}</strong>.
-      </div>
-    </div>
-
-  </div>`;
-}
-
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   SECTION E — OUTPUT / EMAIL
-══════════════════════════════════════════════════════════════════════════════ */
-
-/* Build plain-text email body */
-function _buildEmailBody({ ref, today, person, product, freq, result, jointLife, partialMat }) {
-  const { firstname, lastname, email, phone, idno, age, gender, smoker, occupation, employer } = person;
-  const cfg        = _getProductView(product);
-  const { premium, benefits } = result;
-  const freqLabel  = { monthly:'Monthly', quarterly:'Quarterly', annually:'Annual' }[freq];
-  const benefitLines = benefits.map(b => `  • ${b.risk}: ${b.coverage}`).join('\n');
-  const jlSection = (jointLife?.enabled && jointLife.name) ? `\nJOINT LIFE
-  Name:   ${jointLife.name}
-  DOB:    ${jointLife.dob || '—'}
-  Gender: ${jointLife.gender || '—'}
-  Email:  ${jointLife.email || '—'}
-  Phone:  ${jointLife.phone || '—'}\n` : '';
-  const pmSection = (partialMat?.enabled && partialMat.count > 0) ?
-    `\n  Partial Maturities requested: ${partialMat.count} instalments\n` : '';
-
-  return `Dear Sales Team,
-
-A new quote has been generated via the Liberty Life portal and requires processing.
-
-═══════════════════════════════════════
-QUOTE REFERENCE: ${ref}
-DATE:            ${today}
-PRODUCT:         ${cfg.label}
-═══════════════════════════════════════
-
-MAIN LIFE
-  Full Name:     ${firstname} ${lastname}
-  Email:         ${email}
-  Phone:         ${phone || 'Not provided'}
-  ID/Passport:   ${idno || 'Not provided'}
-  Age at Entry:  ${age} years
-  Gender:        ${gender === 'M' ? 'Male' : 'Female'}
-  Smoker:        ${smoker === 'S' ? 'Smoker' : 'Non-Smoker'}
-  Occupation:    ${occupation} (class to be assigned at underwriting)
-  Employer:      ${employer || 'Not provided'}
-${jlSection}
-PREMIUM: KES ${premium.toLocaleString()} (${freqLabel})
-${pmSection}
-KEY BENEFITS
-${benefitLines}
-
-═══════════════════════════════════════
-ACTION REQUIRED
-  1. Assign occupation class based on occupation: "${occupation}"
-  2. Conduct full underwriting review
-  3. Contact client to confirm documentation
-  4. Process application if all requirements are met
-
-Client has received a copy of this quote.
-═══════════════════════════════════════
-Auto-generated by Liberty Life Portal · Do not reply directly.`;
-}
-
-/* ── Send to sales via mailto ── */
-function UI_sendToSales() {
-  const { emailBody, ref, person } = _quoteData;
-  if (!emailBody) return;
-  const to      = 'sales@libertyke.co.ke';
-  const subject = encodeURIComponent(`Liberty Life Application — Ref: ${ref} — ${person.email}`);
-  const body    = encodeURIComponent(emailBody);
-  window.location.href = `mailto:${to}?cc=${encodeURIComponent(person.email)}&subject=${subject}&body=${body}`;
-  showToast('✉️ Email client opened. Ready to send to sales!');
-}
-
-/* ── Toast notification ── */
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3400);
-}
-</script>
+<script src="js/libertyquotes-config.js"></script>
+<script src="js/libertyquotes-api.js"></script>
+<script src="js/libertyquotes-ui.js"></script>
+<script src="js/libertyquotes-output.js"></script>
 </body>
 </html>
-
-
 
 
 

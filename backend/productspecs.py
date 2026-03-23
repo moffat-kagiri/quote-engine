@@ -94,7 +94,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "term": ProductSpec(
         code="term",
         brand="liberty",
-        display_name="Term Life Assurance",
+        display_name="🛡️",
         category="protection",
         description="Pure risk cover for a fixed period.",
         allowed_entry_age=(18, 65),
@@ -119,7 +119,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "wholelife": ProductSpec(
         code="wholelife",
         brand="liberty",
-        display_name="Whole Life Assurance",
+        display_name="🛟",
         category="protection_with_value",
         description="Lifetime cover with potential surrender value.",
         allowed_entry_age=(18, 60),
@@ -143,7 +143,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "endowment": ProductSpec(
         code="endowment",
         brand="liberty",
-        display_name="Endowment / Savings",
+        display_name="💰",
         category="savings",
         description="Protection plus disciplined savings to a maturity date.",
         allowed_entry_age=(18, 60),
@@ -167,7 +167,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "withprofit": ProductSpec(
         code="withprofit",
         brand="liberty",
-        display_name="With-Profit Policy",
+        display_name="📈",
         category="participating",
         description="Participating policy with bonuses declared by the fund.",
         allowed_entry_age=(18, 60),
@@ -191,7 +191,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "pension": ProductSpec(
         code="pension",
         brand="liberty",
-        display_name="Individual Pension",
+        display_name="☂️",
         category="retirement",
         description="Long-term retirement accumulation plan.",
         allowed_entry_age=(18, 60),
@@ -215,7 +215,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "education": ProductSpec(
         code="education",
         brand="liberty",
-        display_name="Soma Plan",
+        display_name="🎓",
         category="goal_savings",
         description="Savings for education milestones with parent protection.",
         allowed_entry_age=(18, 60),
