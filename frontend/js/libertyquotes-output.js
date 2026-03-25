@@ -4,9 +4,20 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
   const { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno } = person;
   const { premium, benefits, freeBenefits, note, details } = result;
   const cfg = _getProductView(product);
-  const freqLabel = { monthly: "Monthly", quarterly: "Quarterly", annually: "Annual" }[freq];
+  const freqLabel = { monthly: "Monthly", quarterly: "Quarterly", semiannual: "Semi-Annual", annually: "Annual" }[freq];
   const gLabel = { M: "Male", F: "Female" }[gender] || gender;
   const sLabel = smoker === "S" ? "Smoker" : "Non-Smoker";
+  
+  // Compute premiums for all frequencies from the monthly premium
+  // The result.premium is already multiplied by the frequency multiplier; convert back to monthly
+  const freqMults = { monthly: 1, quarterly: 2.9, semiannual: 5.5, annually: 10 };
+  const monthlyPremium = Math.round(premium / (freqMults[freq] || 1));
+  const allFreqPremiums = {
+    monthly: monthlyPremium,
+    quarterly: Math.round(monthlyPremium * 2.9),
+    semiannual: Math.round(monthlyPremium * 5.5),
+    annually: Math.round(monthlyPremium * 10)
+  };
 
   const detailRows = (details || []).map(([label, value]) =>
     `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${value}</span></div>`
@@ -75,12 +86,28 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
     </div>
 
     <div class="quote-section">
-      <div class="premium-highlight">
-        <div>
-          <div class="ph-label">${freqLabel} Premium</div>
-          <div class="ph-freq">${freqLabel} payment &middot; auto-debit available</div>
+      <div class="qs-title">Premium Payable (Select your preferred frequency)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+        <div style="border: 2px solid ${freq === 'monthly' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'monthly' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Monthly</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 12× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.monthly.toLocaleString()}</div>
         </div>
-        <div class="ph-val">KES ${premium.toLocaleString()}</div>
+        <div style="border: 2px solid ${freq === 'quarterly' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'quarterly' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Quarterly</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 4× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.quarterly.toLocaleString()}</div>
+        </div>
+        <div style="border: 2px solid ${freq === 'semiannual' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'semiannual' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Semi-Annual</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 2× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.semiannual.toLocaleString()}</div>
+        </div>
+        <div style="border: 2px solid ${freq === 'annually' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'annually' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Annual</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay once per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.annually.toLocaleString()}</div>
+        </div>
       </div>
     </div>
 
@@ -112,7 +139,9 @@ function _buildEmailBody({ ref, today, person, product, freq, result, jointLife,
   const { firstname, lastname, email, phone, idno, age, gender, smoker, occupation, employer } = person;
   const cfg = _getProductView(product);
   const { premium, benefits } = result;
-  const freqLabel = { monthly: "Monthly", quarterly: "Quarterly", annually: "Annual" }[freq];
+  const freqMults = { monthly: 1, quarterly: 2.9, semiannual: 5.5, annually: 10 };
+  const monthlyPremium = Math.round(premium / (freqMults[freq] || 1));
+  const freqLabel = { monthly: "Monthly", quarterly: "Quarterly", semiannual: "Semi-Annual", annually: "Annual" }[freq];
   const benefitLines = benefits.map(benefit => `  - ${benefit.risk}: ${benefit.coverage}`).join("\n");
   const jlSection = (jointLife?.enabled && jointLife.name) ? `\nJOINT LIFE
   Name:   ${jointLife.name}
@@ -145,7 +174,8 @@ MAIN LIFE
   Occupation:    ${occupation} (class to be assigned at underwriting)
   Employer:      ${employer || "Not provided"}
 ${jlSection}
-PREMIUM: KES ${premium.toLocaleString()} (${freqLabel})
+MONTHLY PREMIUM: KES ${monthlyPremium.toLocaleString()}
+${freqLabel.toUpperCase()} PAYMENT: KES ${premium.toLocaleString()} (${freqLabel})
 ${pmSection}
 KEY BENEFITS
 ${benefitLines}

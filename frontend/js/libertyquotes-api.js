@@ -30,18 +30,19 @@ async function CALC_getExcelAutoraterQuote(payload) {
 }
 
 async function CALC_getQuote(payload) {
-  if (USE_EXCEL_AUTORATER) {
-    try {
-      return await CALC_getExcelAutoraterQuote(payload);
-    } catch (err) {
-      if (err.isValidationError) throw err;
-      console.warn("[QuoteEngine] Excel autorater unavailable; trying Python fallback.", err.message);
-      showToast("Excel autorater unavailable - using Python fallback estimates");
-      return CALC_getPythonFallbackQuote(payload);
+  // Primary: try the Python endpoint first. If it fails (non-validation), and
+  // the Excel autorater is enabled, try the Excel autorater as a fallback.
+  try {
+    return await CALC_getPythonFallbackQuote(payload);
+  } catch (err) {
+    if (err.isValidationError) throw err;
+    console.warn("[QuoteEngine] Python quote failed; attempting Excel autorater.", err.message);
+    showToast("Primary quote failed - trying autorater fallback");
+    if (USE_EXCEL_AUTORATER) {
+      return CALC_getExcelAutoraterQuote(payload);
     }
+    throw err;
   }
-
-  return CALC_getPythonFallbackQuote(payload);
 }
 
 async function CALC_getPythonFallbackQuote(payload) {

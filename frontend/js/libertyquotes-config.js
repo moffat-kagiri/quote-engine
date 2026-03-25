@@ -2,16 +2,17 @@
 
 const PRODUCT_SPECS_ENDPOINT = "http://localhost:5050/productspecs";
 const EXCEL_AUTORATER_ENDPOINT = "http://localhost:5050/quote";
-const USE_EXCEL_AUTORATER = true;
+const USE_EXCEL_AUTORATER = true; // keep excel available as fallback
 const PYTHON_FALLBACK_ENDPOINT = "http://localhost:5050/quote/fallback";
 
+// Use simple illustrative emojis for product tiles (large visual icon)
 const PRODUCT_ICON_BY_CATEGORY = {
-  protection: "Protection",
-  protection_with_value: "Whole Life",
-  savings: "Savings",
-  participating: "With Profit",
-  retirement: "Retirement",
-  goal_savings: "Education",
+  protection: "🛡️",
+  protection_with_value: "🏛️",
+  savings: "💰",
+  participating: "📈",
+  retirement: "🏖️",
+  goal_savings: "🎓",
 };
 
 const SPEC_TO_TEMPLATE_FIELD = {

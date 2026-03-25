@@ -58,13 +58,13 @@ function UI_buildProductGrid() {
   }
 
   grid.innerHTML = products.map(([key, spec]) => {
-    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || "Product";
-    const displayName = spec.display_name || icon;
+    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || "🔷";
+    const displayName = spec.display_name || key;
     return `
       <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
         <div class="product-check">v</div>
-        <span class="product-icon">${displayName}</span>
-        <div class="product-name">${icon}</div>
+        <span class="product-icon">${icon}</span>
+        <div class="product-name">${displayName}</div>
         <div class="product-desc">${spec.description || ""}</div>
       </div>`;
   }).join("");
@@ -125,6 +125,26 @@ function _buildProductFields(product) {
   });
   html += "</div>";
 
+  // If this is the Education product, render benefit selection checkboxes
+  if ((spec.code || product) === "education") {
+    html += `
+    <div class="subsection-label">Select Benefits</div>
+    <div class="form-grid">
+      <div class="form-group span-2">
+        <label>Benefits (Death is mandatory)</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-death" checked disabled /> Death</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-ptd" /> PTD</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-ci" /> Critical Illness</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-retrenchment" /> Retrenchment</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-doubleacc" /> Double Accident</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-wopdisability" /> WOP Disability</label>
+        </div>
+        <span class="hint">Tick optional benefits to include their premium components.</span>
+      </div>
+    </div>`;
+  }
+
   if ((spec.optional_fields || []).includes("partialMat.enabled")) {
     html += `
     <div class="toggle-row" onclick="UI_toggleSection('partial-mat-content','partial-mat-switch')">
@@ -181,6 +201,13 @@ function _buildProductFields(product) {
         <div class="form-group">
           <label>Phone Number</label>
           <input type="tel" id="f-jl-phone" placeholder="e.g. +254 7XX XXX XXX" />
+        </div>
+        <div class="form-group">
+          <label>Employment Status</label>
+          <select id="f-jl-employment">
+            <option value="employed">Employed</option>
+            <option value="unemployed">Unemployed</option>
+          </select>
         </div>
       </div>
     </div>`;
@@ -495,6 +522,19 @@ async function UI_submitForQuote() {
   if (jlEnabled && jointLife.dob) {
     jointLife.age = _calcAge(jointLife.dob);
   }
+  // read joint employment status if present
+  const jlEmploymentEl = document.getElementById("f-jl-employment");
+  if (jlEmploymentEl) jointLife.employmentStatus = jlEmploymentEl.value || "employed";
+
+  // benefit selections (education)
+  const benefits = {
+    Death: document.getElementById("benefit-death")?.checked || true,
+    PTD: document.getElementById("benefit-ptd")?.checked || false,
+    CriticalIllness: document.getElementById("benefit-ci")?.checked || false,
+    Retrenchment: document.getElementById("benefit-retrenchment")?.checked || false,
+    DoubleAccident: document.getElementById("benefit-doubleacc")?.checked || false,
+    WOPDisability: document.getElementById("benefit-wopdisability")?.checked || false,
+  };
 
   const payload = {
     product: _selectedProduct,
@@ -503,16 +543,17 @@ async function UI_submitForQuote() {
     gender,
     smoker,
     freq,
-    sa: sa || null,
-    term: term || null,
-    escalationRate: escalationRate || null,
-    contrib: contrib || null,
-    retireAge: retireAge || null,
-    target: target || null,
+    sa: sa !== null ? sa : null,
+    term: term !== null ? term : null,
+    escalationRate: escalationRate !== null ? escalationRate : null,
+    contrib: contrib !== null ? contrib : null,
+    retireAge: retireAge !== null ? retireAge : null,
+    target: target !== null ? target : null,
     childName,
     childDob,
     partialMat,
     jointLife,
+    benefits,
   };
 
   document.getElementById("loading-overlay").classList.add("show");
