@@ -1,14 +1,49 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Mapping
+import json
+import os
 
 from productspecs import normalize_payload
 
 
+# Load rate factors from rates.json (lazy-loaded)
+_RATES: Dict[str, Any] = {}
+
+
+def _load_rates() -> Dict[str, Any]:
+    global _RATES
+    if _RATES:
+        return _RATES
+    path = os.path.join(os.path.dirname(__file__), "rates.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            _RATES = json.load(fh)
+    except Exception:
+        _RATES = {}
+    return _RATES
+
+
+def _get_rate_factor(product: str, benefit: str, term: int) -> float:
+    rates = _load_rates()
+    # rates.json uses capitalised product keys like "Education"
+    prod_key = product.capitalize()
+    try:
+        # navigate to the specific benefit and its term entry
+        return float(
+            rates.get("products", {}).get(prod_key, {}).get("benefits", {}).get(benefit, {}).get(str(term), 0) or 0
+        )
+    except Exception:
+        return 0.0
+
+
 _FREQ_MULT = {
+    # baseline: monthly = 1 (monthly premium)
+    # quarterly/ semiannual/ annual use discounted multipliers per business rule
     "monthly": 1,
-    "quarterly": 3,
-    "annually": 12,
+    "quarterly": 2.9,
+    "semiannual": 5.5,
+    "annually": 10,
 }
 
 
@@ -171,10 +206,45 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
         note = "Projections at 8% p.a. Actual returns depend on fund performance."
 
     elif product == "education":
-        escalation = escalation_rate / 100.0
-        projected_target = target * ((1 + escalation) ** term)
-        monthly = round(projected_target / (term * 12 * 1.22))
-        premium = monthly * freq_mult
+        # New benefit-based premium calculation
+        # Base amount for benefit calculations: prefer `sa` if present, otherwise `target`
+        base_amount = sa if sa and sa > 0 else target
+        if not base_amount:
+            raise ValueError("Missing sum-assured/target for education quote.")
+
+        selected_benefits = p.get("benefits") or {}
+        # benefit names we support
+        benefit_names = ["Death", "PTD", "CriticalIllness", "Retrenchment", "DoubleAccident", "WOPDisability"]
+
+        # compute monthly component for each enabled benefit using rates.json factors (monthly factors)
+        benefit_components = {}
+        for bname in benefit_names:
+            if not selected_benefits.get(bname):
+                benefit_components[bname] = 0.0
+                continue
+            factor = _get_rate_factor("education", bname, int(term or 0))
+            monthly_comp = base_amount * factor
+            benefit_components[bname] = monthly_comp
+
+        single_monthly = sum(benefit_components.values())
+
+        # Joint life premium: 0.85 * single life premium
+        joint_monthly = 0.0
+        if joint_life.get("enabled"):
+            jl_employment = joint_life.get("employmentStatus") or "employed"
+            retrench_monthly = benefit_components.get("Retrenchment", 0.0)
+            if jl_employment == "unemployed":
+                # joint life not eligible for retrenchment: deduct that component
+                joint_monthly = 0.85 * max(0.0, single_monthly - retrench_monthly)
+            else:
+                joint_monthly = 0.85 * single_monthly
+
+        phcf_levy = 0.0025 * (single_monthly + joint_monthly)
+        total_monthly = single_monthly + joint_monthly + phcf_levy
+        premium = round(total_monthly * freq_mult)
+
+        # build details and benefits summary for the UI
+        projected_target = round(base_amount * ((1 + (escalation_rate / 100.0)) ** (term or 0)))
         m1 = round(projected_target * 0.25)
         m2 = round(projected_target * 0.35)
         m3 = round(projected_target * 0.40)
@@ -184,13 +254,47 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
             ["Projected Target at Maturity", f"KES {int(projected_target):,}"],
             ["Policy Term", f"{term} yrs"],
         ]
-        benefits = [
-            {"risk": "Full Target Fund", "coverage": f"KES {int(projected_target):,}", "note": "At maturity (escalated target)", "highlight": True},
-            {"risk": f"Milestone 1 (yr {int(term * 0.4)})", "coverage": f"KES {m1:,}", "note": "University entry", "highlight": False},
-            {"risk": f"Milestone 2 (yr {int(term * 0.6)})", "coverage": f"KES {m2:,}", "note": "Mid-university", "highlight": False},
-            {"risk": "Milestone 3 (maturity)", "coverage": f"KES {m3:,}", "note": "Final release", "highlight": False},
-            {"risk": "Parent Death Benefit", "coverage": f"KES {int(projected_target):,}", "note": "Premiums waived + fund secured", "highlight": False},
-        ]
+
+        benefits = []
+        # list benefit cards from selected benefits and computed components
+        for bname in benefit_names:
+            if not selected_benefits.get(bname):
+                continue
+            # Coverage display per product definitions (display only — not used for pricing)
+            if bname == "Death":
+                cov = f"KES {int(base_amount):,}"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,}"
+            elif bname == "PTD":
+                cov = f"KES {int(base_amount):,}"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,}"
+            elif bname == "CriticalIllness":
+                cov = f"KES {int(round(0.35 * base_amount)):,}"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,} — Pays 35% of Sum Assured on diagnosis"
+            elif bname == "DoubleAccident":
+                cov = f"KES {int(2 * base_amount):,}"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,} — Pays 2x Sum Assured for accidental death"
+            elif bname == "Retrenchment":
+                # display waiver of 6 months' premiums (use single_monthly to derive amount)
+                waiver_amt = int(round(single_monthly * 6))
+                cov = f"Waiver of 6 months' premiums (KES {waiver_amt:,})"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,} — Waives 6 months' premiums on retrenchment"
+            elif bname == "WOPDisability":
+                # display waiver of premiums for remaining term
+                remaining_premium = int(round(single_monthly * (term or 12)))
+                cov = f"Premium waiver for remaining {term or 12} years"
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,} — Waives all premiums on permanent disability"
+            else:
+                cov = ""
+                note = f"Monthly premium component: KES {round(benefit_components.get(bname,0)):,}"
+
+            benefits.append({
+                "risk": bname,
+                "coverage": cov,
+                "note": note,
+                "highlight": bname == "Death",
+            })
+
+        # partial maturities (unchanged behaviour)
         if partial_mat.get("enabled") and (partial_mat.get("count") or 0) > 0:
             count = int(partial_mat["count"])
             slice_amount = round(target * 0.08)
@@ -207,7 +311,7 @@ def calculate_quote(payload: Mapping[str, Any]) -> Dict[str, Any]:
             "Scholarship advisory service",
             "University placement support",
         ]
-        note = "Education milestones are structured disbursements from the accumulated fund."
+        note = "Education premiums shown are benefit-based; PHCF levy included."
 
     else:
         raise ValueError(f"Unsupported product '{product}'.")
