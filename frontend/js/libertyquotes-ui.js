@@ -58,13 +58,13 @@ function UI_buildProductGrid() {
   }
 
   grid.innerHTML = products.map(([key, spec]) => {
-    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || "Product";
-    const displayName = spec.display_name || icon;
+    const icon = PRODUCT_ICON_BY_CATEGORY[spec.category] || "🔷";
+    const displayName = spec.display_name || key;
     return `
       <div class="product-card" data-product="${key}" onclick="UI_selectProduct(this)">
         <div class="product-check">v</div>
-        <span class="product-icon">${displayName}</span>
-        <div class="product-name">${icon}</div>
+        <span class="product-icon">${icon}</span>
+        <div class="product-name">${displayName}</div>
         <div class="product-desc">${spec.description || ""}</div>
       </div>`;
   }).join("");
@@ -117,6 +117,31 @@ function _buildProductFields(product) {
     return;
   }
 
+  // Special handling for With-Profit product
+  if ((spec.code || product) === "withprofit") {
+    _buildWithProfitFields(container, spec);
+    _applyProductConstraints(spec);
+    return;
+  }
+
+  // Special handling for Pension product
+  if ((spec.code || product) === "pension") {
+    let html = `
+    <div class="subsection-label">Contribution & Retirement Details</div>
+    <div class="form-grid">
+      ${FIELD_TEMPLATES["contribution"]}
+      ${FIELD_TEMPLATES["retirement-age"]}
+    </div>
+    <div class="subsection-label">Investment Fund</div>
+    <div class="form-grid">
+      ${FIELD_TEMPLATES["pension-fund-type"]}
+      ${FIELD_TEMPLATES["pension-balanced-weights"]}
+    </div>`;
+    container.innerHTML = html;
+    _applyProductConstraints(spec);
+    return;
+  }
+
   const templateFields = _getProductTemplateFields(spec);
 
   let html = '<div class="subsection-label">Product Details</div><div class="form-grid">';
@@ -124,6 +149,26 @@ function _buildProductFields(product) {
     html += FIELD_TEMPLATES[fid] || "";
   });
   html += "</div>";
+
+  // If this is the Education product, render benefit selection checkboxes
+  if ((spec.code || product) === "education") {
+    html += `
+    <div class="subsection-label">Select Benefits</div>
+    <div class="form-grid">
+      <div class="form-group span-2">
+        <label>Benefits (Death is mandatory)</label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-death" checked disabled /> Death</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-ptd" /> PTD</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-ci" /> Critical Illness</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-retrenchment" /> Retrenchment</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-doubleacc" /> Double Accident</label>
+          <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="benefit-wopdisability" /> WOP Disability</label>
+        </div>
+        <span class="hint">Tick optional benefits to include their premium components.</span>
+      </div>
+    </div>`;
+  }
 
   if ((spec.optional_fields || []).includes("partialMat.enabled")) {
     html += `
@@ -181,6 +226,13 @@ function _buildProductFields(product) {
         <div class="form-group">
           <label>Phone Number</label>
           <input type="tel" id="f-jl-phone" placeholder="e.g. +254 7XX XXX XXX" />
+        </div>
+        <div class="form-group">
+          <label>Employment Status</label>
+          <select id="f-jl-employment">
+            <option value="employed">Employed</option>
+            <option value="unemployed">Unemployed</option>
+          </select>
         </div>
       </div>
     </div>`;
@@ -431,9 +483,29 @@ function UI_validateBeforeSubmit(spec) {
 
   if (!_validateAgeField(spec, false)) ok = false;
 
-  ["sa", "term", "escalationRate", "contrib", "retireAge", "target"].forEach(field => {
-    if (!_validateNumericField(field, spec, false)) ok = false;
-  });
+  // WithProfit specific validation
+  if ((_selectedProduct || "") === "withprofit") {
+    const wpInitial = document.getElementById("f-wp-initial");
+    const wpTerm = document.getElementById("f-wp-term");
+    const wpPremium = document.getElementById("f-wp-premium");
+    
+    if (!wpInitial || !wpInitial.value) {
+      _setFieldError("f-wp-initial", "Initial deposit is required.");
+      ok = false;
+    }
+    if (!wpTerm || !wpTerm.value) {
+      _setFieldError("f-wp-term", "Policy term is required.");
+      ok = false;
+    }
+    if (!wpPremium || !wpPremium.value) {
+      _setFieldError("f-wp-premium", "Annual premium is required.");
+      ok = false;
+    }
+  } else {
+    ["sa", "term", "escalationRate", "contrib", "retireAge", "target"].forEach(field => {
+      if (!_validateNumericField(field, spec, false)) ok = false;
+    });
+  }
 
   const partialEnabled = document.getElementById("partial-mat-content")?.classList.contains("open") || false;
   const partialCount = _safeNum("f-partial-count");
@@ -495,6 +567,49 @@ async function UI_submitForQuote() {
   if (jlEnabled && jointLife.dob) {
     jointLife.age = _calcAge(jointLife.dob);
   }
+  // read joint employment status if present
+  const jlEmploymentEl = document.getElementById("f-jl-employment");
+  if (jlEmploymentEl) jointLife.employmentStatus = jlEmploymentEl.value || "employed";
+
+  // benefit selections (education)
+  const benefits = {
+    Death: document.getElementById("benefit-death")?.checked || true,
+    PTD: document.getElementById("benefit-ptd")?.checked || false,
+    CriticalIllness: document.getElementById("benefit-ci")?.checked || false,
+    Retrenchment: document.getElementById("benefit-retrenchment")?.checked || false,
+    DoubleAccident: document.getElementById("benefit-doubleacc")?.checked || false,
+    WOPDisability: document.getElementById("benefit-wopdisability")?.checked || false,
+  };
+
+  // With-Profit specific fields
+  let withProfitData = null;
+  if (_selectedProduct === "withprofit") {
+    const wpInitial = _safeNum("f-wp-initial");
+    const wpTerm = _safeNum("f-wp-term");
+    const wpFreq = document.getElementById("f-wp-frequency")?.value || "annual";
+    const wpPremium = _safeNum("f-wp-premium");
+    const wpCashFlows = UI_getWithProfitCashFlows();
+    
+    withProfitData = {
+      initialDeposit: wpInitial || 500000,
+      term: wpTerm || 5,
+      frequency: wpFreq,
+      annualPremium: wpPremium || 100000,
+      cashFlows: wpCashFlows,
+    };
+  }
+
+  // Pension specific fields
+  let pensionFundType = null;
+  let pensionBalancedWeightsAgg = null;
+  let pensionBalancedWeightsCons = null;
+  if (_selectedProduct === "pension") {
+    pensionFundType = document.getElementById("f-pension-fund-type")?.value || "balanced";
+    if (pensionFundType === "balanced") {
+      pensionBalancedWeightsAgg = parseFloat(document.getElementById("f-pension-weight-aggressive")?.value || 50);
+      pensionBalancedWeightsCons = parseFloat(document.getElementById("f-pension-weight-conservative")?.value || 50);
+    }
+  }
 
   const payload = {
     product: _selectedProduct,
@@ -503,16 +618,21 @@ async function UI_submitForQuote() {
     gender,
     smoker,
     freq,
-    sa: sa || null,
-    term: term || null,
-    escalationRate: escalationRate || null,
-    contrib: contrib || null,
-    retireAge: retireAge || null,
-    target: target || null,
+    sa: sa !== null ? sa : null,
+    term: term !== null ? term : null,
+    escalationRate: escalationRate !== null ? escalationRate : null,
+    contrib: contrib !== null ? contrib : null,
+    retireAge: retireAge !== null ? retireAge : null,
+    target: target !== null ? target : null,
     childName,
     childDob,
     partialMat,
     jointLife,
+    benefits,
+    withProfit: withProfitData,
+    pensionFundType,
+    pensionBalancedWeightsAgg,
+    pensionBalancedWeightsCons,
   };
 
   document.getElementById("loading-overlay").classList.add("show");
@@ -570,6 +690,305 @@ function _calcAge(dob) {
 
 function _makeRef() {
   return `LIQ-${Date.now().toString(36).toUpperCase().slice(-7)}`;
+}
+
+/**
+ * BUILD WITH-PROFIT FIELDS
+ * Special handling for the With-Profit policy product
+ */
+function _buildWithProfitFields(container, spec) {
+  let html = `
+    <div class="subsection-label">With-Profit Policy Configuration</div>
+    <div class="form-grid">
+      ${FIELD_TEMPLATES["withprofit-initial"]}
+      ${FIELD_TEMPLATES["withprofit-term"]}
+    </div>
+    <div class="subsection-label">Investment Fund</div>
+    <div class="form-grid">
+      ${FIELD_TEMPLATES["withprofit-fund-type"]}
+      ${FIELD_TEMPLATES["withprofit-balanced-weights"]}
+    </div>
+    <div class="subsection-label">Premium Payment</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;" class="form-grid">
+      <div class="form-group">
+        <label>Premium Amount (KES) <span style="color:#c0392b">*</span></label>
+        <div class="currency-wrap">
+          <span class="currency-prefix">KES</span>
+          <input type="number" id="f-wp-premium" min="10000" max="5000000" step="5000"
+            placeholder="100,000" value="100000"
+            oninput="UI_formatCurrencyInput(this);UI_generateWithProfitTable()" />
+        </div>
+        <span class="hint">Amount per payment period (see frequency)</span>
+      </div>
+      ${FIELD_TEMPLATES["withprofit-frequency"]}
+    </div>
+    ${WITHPROFIT_TABLE_HTML}
+  `;
+  container.innerHTML = html;
+  UI_generateWithProfitTable();
+}
+
+/**
+ * GENERATE WITH-PROFIT TABLE
+ * Creates initial rows based on policy term with frequency-adjusted premium
+ */
+function UI_generateWithProfitTable() {
+  const termInput = document.getElementById("f-wp-term");
+  const premiumInput = document.getElementById("f-wp-premium");
+  const freqInput = document.getElementById("f-wp-frequency");
+  const bodyEl = document.getElementById("wp-cashflow-body");
+  if (!termInput || !bodyEl || !premiumInput || !freqInput) return;
+  
+  const term = parseInt(termInput.value) || 5;
+  const premiumAmount = parseFloat(premiumInput.value) || 100000;
+  const frequency = freqInput.value || "annual";
+  
+  // Calculate annual premium based on frequency
+  const frequencyMultipliers = {
+    monthly: 12,
+    quarterly: 4,
+    semiannual: 2,
+    annual: 1,
+    single: 0  // Single premium doesn't repeat
+  };
+  const multiplier = frequencyMultipliers[frequency] || 1;
+  const annualPremium = multiplier === 0 ? premiumAmount : premiumAmount * multiplier;
+  const premiumDisplay = multiplier === 0 ? `Single: ${premiumAmount.toLocaleString()}` : annualPremium.toLocaleString();
+  
+  let html = "";
+  
+  for (let year = 1; year <= term; year++) {
+    // Single premium only in year 1, zero in other years
+    const yearPremium = (frequency === "single" && year === 1) ? premiumAmount : (frequency === "single" ? 0 : annualPremium);
+    
+    html += `
+      <tr style="border-bottom:1px solid #dde4ed;">
+        <td style="padding:8px;border-right:1px solid #dde4ed;font-weight:700;">${year}</td>
+        <td style="padding:8px;border-right:1px solid #dde4ed;text-align:right;background:#f9fdf7;font-weight:600;" class="wp-premium-display" data-year="${year}">KES ${yearPremium.toLocaleString()}</td>
+        <td style="padding:8px;border-right:1px solid #dde4ed;">
+          <input type="number" class="wp-deposit" data-year="${year}" min="0" step="10000" 
+            placeholder="0" style="width:100%;border:1px solid #A6CBDB;padding:6px;font-size:0.75rem;"/>
+        </td>
+        <td style="padding:8px;border-right:1px solid #dde4ed;">
+          <input type="number" class="wp-withdrawal" data-year="${year}" min="0" step="10000" 
+            placeholder="0" style="width:100%;border:1px solid #A6CBDB;padding:6px;font-size:0.75rem;"/>
+        </td>
+        <td style="padding:8px;text-align:center;">
+          <button type="button" class="btn" style="font-size:0.65rem;padding:4px 8px;" onclick="UI_removeWithProfitRow(${year})">Remove</button>
+        </td>
+      </tr>
+    `;
+  }
+  
+  bodyEl.innerHTML = html;
+}
+
+/**
+ * ADD WITH-PROFIT ROW
+ * Extends the policy term by adding another year
+ */
+function UI_addWithProfitRow() {
+  const tableEl = document.getElementById("wp-cashflow-table");
+  const bodyEl = document.getElementById("wp-cashflow-body");
+  const premiumInput = document.getElementById("f-wp-premium");
+  const freqInput = document.getElementById("f-wp-frequency");
+  if (!bodyEl || !premiumInput || !freqInput) return;
+  
+  const currentRows = bodyEl.querySelectorAll("tr").length;
+  const nextYear = currentRows + 1;
+  
+  // Calculate annual premium for the new row
+  const premiumAmount = parseFloat(premiumInput.value) || 100000;
+  const frequency = freqInput.value || "annual";
+  const frequencyMultipliers = {
+    monthly: 12,
+    quarterly: 4,
+    semiannual: 2,
+    annual: 1,
+    single: 0
+  };
+  const multiplier = frequencyMultipliers[frequency] || 1;
+  const annualPremium = multiplier === 0 ? premiumAmount : premiumAmount * multiplier;
+  const yearPremium = (frequency === "single" && nextYear === 1) ? premiumAmount : (frequency === "single" ? 0 : annualPremium);
+  
+  const newRow = `
+    <tr style="border-bottom:1px solid #dde4ed;">
+      <td style="padding:8px;border-right:1px solid #dde4ed;font-weight:700;">${nextYear}</td>
+      <td style="padding:8px;border-right:1px solid #dde4ed;text-align:right;background:#f9fdf7;font-weight:600;" class="wp-premium-display" data-year="${nextYear}">KES ${yearPremium.toLocaleString()}</td>
+      <td style="padding:8px;border-right:1px solid #dde4ed;">
+        <input type="number" class="wp-deposit" data-year="${nextYear}" min="0" step="10000" 
+          placeholder="0" style="width:100%;border:1px solid #A6CBDB;padding:6px;font-size:0.75rem;"/>
+      </td>
+      <td style="padding:8px;border-right:1px solid #dde4ed;">
+        <input type="number" class="wp-withdrawal" data-year="${nextYear}" min="0" step="10000" 
+          placeholder="0" style="width:100%;border:1px solid #A6CBDB;padding:6px;font-size:0.75rem;"/>
+      </td>
+      <td style="padding:8px;text-align:center;">
+        <button type="button" class="btn" style="font-size:0.65rem;padding:4px 8px;" onclick="UI_removeWithProfitRow(${nextYear})">Remove</button>
+      </td>
+    </tr>
+  `;
+  
+  bodyEl.insertAdjacentHTML("beforeend", newRow);
+  showToast(`Added year ${nextYear}`);
+}
+
+/**
+ * REMOVE WITH-PROFIT ROW
+ */
+function UI_removeWithProfitRow(year) {
+  const rows = document.querySelectorAll("#wp-cashflow-body tr");
+  if (rows.length <= 1) {
+    showToast("Must keep at least 1 year");
+    return;
+  }
+  
+  const rowToRemove = Array.from(rows).find(row => {
+    const firstCell = row.querySelector("td:first-child");
+    return firstCell && parseInt(firstCell.textContent) === year;
+  });
+  
+  if (rowToRemove) {
+    rowToRemove.remove();
+    showToast(`Removed year ${year}`);
+  }
+}
+
+/**
+ * GET WITH-PROFIT CASH FLOWS
+ * Collects all deposits and withdrawals from the table
+ */
+function UI_getWithProfitCashFlows() {
+  const cashFlows = [];
+  const deposits = document.querySelectorAll(".wp-deposit");
+  const withdrawals = document.querySelectorAll(".wp-withdrawal");
+  
+  deposits.forEach(depEl => {
+    const year = parseInt(depEl.dataset.year);
+    const dep = parseFloat(depEl.value) || 0;
+    const witEl = document.querySelector(`.wp-withdrawal[data-year="${year}"]`);
+    const wit = witEl ? parseFloat(witEl.value) || 0 : 0;
+    
+    if (dep > 0 || wit > 0) {
+      cashFlows.push({ year, deposit: dep, withdrawal: wit });
+    }
+  });
+  
+  return cashFlows;
+}
+
+/**
+ * TOGGLE BALANCED WEIGHTS
+ * Shows/hides balanced fund weight sliders based on fund type selection
+ */
+function UI_toggleBalancedWeights(productType) {
+  const fundTypeSelect = document.getElementById(`f-${productType}-fund-type`);
+  const balancedWrapper = document.getElementById(`${productType}-balanced-weights-wrapper`);
+  
+  if (!fundTypeSelect || !balancedWrapper) return;
+  
+  if (fundTypeSelect.value === "balanced") {
+    balancedWrapper.style.display = "block";
+  } else {
+    balancedWrapper.style.display = "none";
+  }
+}
+
+/**
+ * UPDATE BALANCED WEIGHTS
+ * Recalculates balanced fund return rate based on slider weights
+ */
+function UI_updateBalancedWeights(productType) {
+  const fundRates = {
+    cash: 0.11,
+    aggressive: 0.075,
+    conservative: 0.05
+  };
+  
+  let weights = {};
+  let totalWeight = 0;
+  
+  if (productType === "wp") {
+    weights.cash = parseFloat(document.getElementById("f-wp-weight-cash")?.value || 0) / 100;
+    weights.aggressive = parseFloat(document.getElementById("f-wp-weight-aggressive")?.value || 0) / 100;
+    weights.conservative = parseFloat(document.getElementById("f-wp-weight-conservative")?.value || 0) / 100;
+    totalWeight = weights.cash + weights.aggressive + weights.conservative;
+    
+    // Update percentage displays
+    document.getElementById("wp-cash-pct").textContent = Math.round(weights.cash * 100);
+    document.getElementById("wp-aggressive-pct").textContent = Math.round(weights.aggressive * 100);
+    document.getElementById("wp-conservative-pct").textContent = Math.round(weights.conservative * 100);
+  } else if (productType === "pension") {
+    weights.aggressive = parseFloat(document.getElementById("f-pension-weight-aggressive")?.value || 0) / 100;
+    weights.conservative = parseFloat(document.getElementById("f-pension-weight-conservative")?.value || 0) / 100;
+    totalWeight = weights.aggressive + weights.conservative;
+    
+    // Update percentage displays
+    document.getElementById("pension-aggressive-pct").textContent = Math.round(weights.aggressive * 100);
+    document.getElementById("pension-conservative-pct").textContent = Math.round(weights.conservative * 100);
+  }
+  
+  // Normalize weights to 100%
+  if (totalWeight > 0) {
+    weights.cash = (weights.cash || 0) / totalWeight;
+    weights.aggressive = (weights.aggressive || 0) / totalWeight;
+    weights.conservative = (weights.conservative || 0) / totalWeight;
+  }
+  
+  // Calculate blended return
+  const blendedReturn = (weights.cash || 0) * fundRates.cash +
+                        (weights.aggressive || 0) * fundRates.aggressive +
+                        (weights.conservative || 0) * fundRates.conservative;
+  
+  // Update display
+  const returnEl = document.getElementById(`${productType}-balanced-return`);
+  if (returnEl) {
+    returnEl.textContent = (blendedReturn * 100).toFixed(2) + "%";
+  }
+}
+
+/**
+ * GET FUND RETURN RATE
+ * Returns the fund return rate based on selected fund type
+ */
+function UI_getFundReturnRate(productType) {
+  const fundTypeSelect = document.getElementById(`f-${productType}-fund-type`);
+  if (!fundTypeSelect) return 0.09;  // Default to 9%
+  
+  const fundType = fundTypeSelect.value;
+  const fundRates = {
+    cash: 0.11,
+    aggressive: 0.075,
+    conservative: 0.05
+  };
+  
+  if (fundType === "balanced") {
+    // Calculate weighted return
+    let weights = {};
+    if (productType === "wp") {
+      weights.cash = parseFloat(document.getElementById("f-wp-weight-cash")?.value || 0) / 100;
+      weights.aggressive = parseFloat(document.getElementById("f-wp-weight-aggressive")?.value || 0) / 100;
+      weights.conservative = parseFloat(document.getElementById("f-wp-weight-conservative")?.value || 0) / 100;
+    } else if (productType === "pension") {
+      weights.aggressive = parseFloat(document.getElementById("f-pension-weight-aggressive")?.value || 0) / 100;
+      weights.conservative = parseFloat(document.getElementById("f-pension-weight-conservative")?.value || 0) / 100;
+    }
+    
+    const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+    if (totalWeight > 0) {
+      const normalized = Object.keys(weights).reduce((acc, key) => {
+        acc[key] = (weights[key] || 0) / totalWeight;
+        return acc;
+      }, {});
+      
+      return (normalized.cash || 0) * fundRates.cash +
+             (normalized.aggressive || 0) * fundRates.aggressive +
+             (normalized.conservative || 0) * fundRates.conservative;
+    }
+    return 0.0625;  // Default balanced: 6.25%
+  }
+  
+  return fundRates[fundType] || 0.09;
 }
 
 function showToast(msg) {

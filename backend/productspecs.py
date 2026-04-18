@@ -94,7 +94,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "term": ProductSpec(
         code="term",
         brand="liberty",
-        display_name="🛡️",
+        display_name="Protection Cover",
         category="protection",
         description="Pure risk cover for a fixed period.",
         allowed_entry_age=(18, 65),
@@ -119,7 +119,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "wholelife": ProductSpec(
         code="wholelife",
         brand="liberty",
-        display_name="🛟",
+        display_name="Whole Life Assurance",
         category="protection_with_value",
         description="Lifetime cover with potential surrender value.",
         allowed_entry_age=(18, 60),
@@ -143,7 +143,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "endowment": ProductSpec(
         code="endowment",
         brand="liberty",
-        display_name="💰",
+        display_name="Endowment/Savings Policy",
         category="savings",
         description="Protection plus disciplined savings to a maturity date.",
         allowed_entry_age=(18, 60),
@@ -167,7 +167,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "withprofit": ProductSpec(
         code="withprofit",
         brand="liberty",
-        display_name="📈",
+        display_name="With-Profits Policy",
         category="participating",
         description="Participating policy with bonuses declared by the fund.",
         allowed_entry_age=(18, 60),
@@ -177,7 +177,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
         allows_joint_life=False,
         allows_partial_maturity=False,
         supports_smoker_rating=False,
-        required_fields=("age", "gender", "freq", "sa", "term", "escalationRate"),
+        required_fields=("age", "gender", "freq"),
         optional_fields=(),
         financial_limits={"sa": (100000, 10000000), "escalationRate": (0, 20)},
         underwriting_flags={"bonus_non_guaranteed": True},
@@ -191,7 +191,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "pension": ProductSpec(
         code="pension",
         brand="liberty",
-        display_name="☂️",
+        display_name="Pension Plan",
         category="retirement",
         description="Long-term retirement accumulation plan.",
         allowed_entry_age=(18, 60),
@@ -202,7 +202,7 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
         allows_partial_maturity=False,
         supports_smoker_rating=False,
         required_fields=("age", "gender", "freq", "contrib", "retireAge"),
-        optional_fields=(),
+        optional_fields=("pensionFundType", "pensionBalancedWeights"),
         financial_limits={"contrib": (2000, 100000000)},
         underwriting_flags={"tax_relief_limit_per_month": 30000},
         default_assumptions={"growth_rate": 0.08, "annuity_conversion_factor": 0.006},
@@ -215,13 +215,13 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
     "education": ProductSpec(
         code="education",
         brand="liberty",
-        display_name="🎓",
+        display_name="Education Savings Plan",
         category="goal_savings",
         description="Savings for education milestones with parent protection.",
         allowed_entry_age=(18, 60),
-        allowed_term_years=(5, 25),
+        allowed_term_years=(5, 20),
         maturity_age_limit=75,
-        allowed_frequencies=("monthly", "quarterly", "annually"),
+        allowed_frequencies=("monthly", "quarterly", "semiannual", "annually"),
         allows_joint_life=True,
         allows_partial_maturity=True,
         supports_smoker_rating=False,
@@ -298,6 +298,22 @@ def normalize_payload(payload: Mapping[str, Any]) -> Dict[str, Any]:
         calculated_age = calculate_age_from_dob(normalized.get("dob"))
         if calculated_age is not None:
             normalized["age"] = calculated_age
+    # Ensure benefits structure exists and Death is enabled by default for products
+    if "benefits" not in normalized or not isinstance(normalized.get("benefits"), Mapping):
+        # default benefit set (Death mandatory, others optional)
+        normalized["benefits"] = {
+            "Death": True,
+            "PTD": False,
+            "CriticalIllness": False,
+            "Retrenchment": False,
+            "DoubleAccident": False,
+        }
+    else:
+        # ensure Death is present and True by default if missing
+        b = dict(normalized.get("benefits") or {})
+        if "Death" not in b:
+            b["Death"] = True
+        normalized["benefits"] = b
     return normalized
 
 
@@ -327,6 +343,12 @@ def validate_payload(payload: Mapping[str, Any]) -> Tuple[bool, List[str]]:
         min_term, max_term = spec.allowed_term_years
         if term < min_term or term > max_term:
             errors.append(f"Term must be between {min_term} and {max_term} years for {product}.")
+
+    # For education product ensure Death benefit is enabled
+    if product == "education":
+        benefits = normalized.get("benefits") or {}
+        if not benefits.get("Death"):
+            errors.append("Death benefit must be enabled for education policies.")
 
     for limit_field, (minimum, maximum) in spec.financial_limits.items():
         value = normalized.get(limit_field)
