@@ -24,10 +24,13 @@ const SPEC_TO_TEMPLATE_FIELD = {
   target: "target-amount",
   childName: "child-name",
   childDob: "child-dob",
+<<<<<<< HEAD
   wpFundType: "withprofit-fund-type",
   wpBalancedWeights: "withprofit-balanced-weights",
   pensionFundType: "pension-fund-type",
   pensionBalancedWeights: "pension-balanced-weights",
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
 };
 
 const SPEC_TO_INPUT_ID = {
@@ -112,6 +115,7 @@ const FIELD_TEMPLATES = {
       <label>Child's Date of Birth</label>
       <input type="date" id="f-childdob" />
     </div>`,
+<<<<<<< HEAD
 
   "withprofit-initial": `
     <div class="form-group">
@@ -229,3 +233,6 @@ const WITHPROFIT_TABLE_HTML = `
 <button class="btn btn-outline" onclick="UI_addWithProfitRow()" style="font-size:0.72rem;padding:6px 14px;">+ Add Another Year</button>
 <span class="hint" style="display:block;margin-top:8px;">Enter annual top-ups and withdrawals. Running balance grows with expected returns based on your selected fund type.</span>`;
 
+=======
+};
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3

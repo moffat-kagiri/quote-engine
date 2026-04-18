@@ -177,7 +177,11 @@ PRODUCT_SPECS: Dict[str, ProductSpec] = {
         allows_joint_life=False,
         allows_partial_maturity=False,
         supports_smoker_rating=False,
+<<<<<<< HEAD
         required_fields=("age", "gender", "freq"),
+=======
+        required_fields=("age", "gender", "freq", "sa", "term"),
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
         optional_fields=(),
         financial_limits={"sa": (100000, 10000000), "escalationRate": (0, 20)},
         underwriting_flags={"bonus_non_guaranteed": True},

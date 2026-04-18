@@ -117,6 +117,7 @@ function _buildProductFields(product) {
     return;
   }
 
+<<<<<<< HEAD
   // Special handling for With-Profit product
   if ((spec.code || product) === "withprofit") {
     _buildWithProfitFields(container, spec);
@@ -142,6 +143,8 @@ function _buildProductFields(product) {
     return;
   }
 
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
   const templateFields = _getProductTemplateFields(spec);
 
   let html = '<div class="subsection-label">Product Details</div><div class="form-grid">';
@@ -483,6 +486,7 @@ function UI_validateBeforeSubmit(spec) {
 
   if (!_validateAgeField(spec, false)) ok = false;
 
+<<<<<<< HEAD
   // WithProfit specific validation
   if ((_selectedProduct || "") === "withprofit") {
     const wpInitial = document.getElementById("f-wp-initial");
@@ -506,6 +510,11 @@ function UI_validateBeforeSubmit(spec) {
       if (!_validateNumericField(field, spec, false)) ok = false;
     });
   }
+=======
+  ["sa", "term", "escalationRate", "contrib", "retireAge", "target"].forEach(field => {
+    if (!_validateNumericField(field, spec, false)) ok = false;
+  });
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
 
   const partialEnabled = document.getElementById("partial-mat-content")?.classList.contains("open") || false;
   const partialCount = _safeNum("f-partial-count");
@@ -581,6 +590,7 @@ async function UI_submitForQuote() {
     WOPDisability: document.getElementById("benefit-wopdisability")?.checked || false,
   };
 
+<<<<<<< HEAD
   // With-Profit specific fields
   let withProfitData = null;
   if (_selectedProduct === "withprofit") {
@@ -611,6 +621,8 @@ async function UI_submitForQuote() {
     }
   }
 
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
   const payload = {
     product: _selectedProduct,
     age,
@@ -629,10 +641,13 @@ async function UI_submitForQuote() {
     partialMat,
     jointLife,
     benefits,
+<<<<<<< HEAD
     withProfit: withProfitData,
     pensionFundType,
     pensionBalancedWeightsAgg,
     pensionBalancedWeightsCons,
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
   };
 
   document.getElementById("loading-overlay").classList.add("show");
@@ -692,6 +707,7 @@ function _makeRef() {
   return `LIQ-${Date.now().toString(36).toUpperCase().slice(-7)}`;
 }
 
+<<<<<<< HEAD
 /**
  * BUILD WITH-PROFIT FIELDS
  * Special handling for the With-Profit policy product
@@ -991,6 +1007,8 @@ function UI_getFundReturnRate(productType) {
   return fundRates[fundType] || 0.09;
 }
 
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;

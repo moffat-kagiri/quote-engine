@@ -38,6 +38,36 @@ def _get_rate_factor(product: str, benefit: str, term: int) -> float:
         return 0.0
 
 
+# Load rate factors from rates.json (lazy-loaded)
+_RATES: Dict[str, Any] = {}
+
+
+def _load_rates() -> Dict[str, Any]:
+    global _RATES
+    if _RATES:
+        return _RATES
+    path = os.path.join(os.path.dirname(__file__), "rates.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            _RATES = json.load(fh)
+    except Exception:
+        _RATES = {}
+    return _RATES
+
+
+def _get_rate_factor(product: str, benefit: str, term: int) -> float:
+    rates = _load_rates()
+    # rates.json uses capitalised product keys like "Education"
+    prod_key = product.capitalize()
+    try:
+        # navigate to the specific benefit and its term entry
+        return float(
+            rates.get("products", {}).get(prod_key, {}).get("benefits", {}).get(benefit, {}).get(str(term), 0) or 0
+        )
+    except Exception:
+        return 0.0
+
+
 _FREQ_MULT = {
     # baseline: monthly = 1 (monthly premium)
     # quarterly/ semiannual/ annual use discounted multipliers per business rule

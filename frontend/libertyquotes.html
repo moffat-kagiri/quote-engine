@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -442,3 +443,449 @@ input:focus, select:focus, textarea:focus {
 <script src="js/libertyquotes-output.js"></script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liberty - Life Assurance Portal</title>
+<style>
+
+/* Design Tokens: change brand colors here */
+:root {
+  --ink:         #0d1117;
+  --paper:       #DEEFFF;
+  --gray:        #CCCCCC;
+  --libertyblue: #112760;
+  --blue:        #002B99;
+  --pale-blue:   #74BBC9;
+  --slate:       #3d4a5c;
+  --muted:       #6b7a8d;
+  --green:       #1a6b4a;
+  --white:       #ffffff;
+  --shadow:      0 1px 8px rgba(13,17,23,0.10);
+  --shadow-lg:   0 4px 24px rgba(13,17,23,0.14);
+  --radius:      3px;
+  --radius-lg:   8px;
+  /* Typography: Arial family throughout */
+  --font-body:   'Helvetica Neue', Arial, Helvetica, sans-serif;
+  --font-mono:   'Courier New', Courier, monospace;
+  --fs-base:     13px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: var(--fs-base);
+  line-height: 1.55;
+}
+
+/* Header */
+header {
+  background: var(--ink);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { color: var(--pale-blue); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.01em; }
+.logo span { color: var(--white); font-weight: 400; }
+.header-tag { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Progress Bar */
+.progress-bar {
+  background: var(--gray);
+  border-bottom: 1px solid #b8c8d8;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  overflow-x: auto;
+}
+.step-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 18px 0 12px;
+  height: 30px; border-radius: 15px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--muted); white-space: nowrap; transition: all 0.25s;
+}
+.step-pill .num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #aab0bb; color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; flex-shrink: 0;
+  font-family: var(--font-mono); transition: background 0.25s;
+}
+.step-pill.active { color: var(--ink); }
+.step-pill.active .num { background: var(--libertyblue); }
+.step-pill.done { color: var(--green); }
+.step-pill.done .num { background: var(--green); }
+.step-arrow { color: #aab0bb; font-size: 0.75rem; padding: 0 2px; }
+
+/* Main */
+main { max-width: 900px; margin: 0 auto; padding: 36px 20px; }
+.section-title { font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.section-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 28px; }
+
+/* Product Cards */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.product-card {
+  border: 2px solid var(--gray); border-radius: var(--radius-lg);
+  padding: 18px 16px; cursor: pointer; transition: all 0.2s;
+  background: var(--white); position: relative; overflow: hidden;
+}
+.product-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--libertyblue); transform: scaleX(0);
+  transform-origin: left; transition: transform 0.25s;
+}
+.product-card:hover { border-color: var(--blue); box-shadow: var(--shadow); }
+.product-card:hover::before { transform: scaleX(1); }
+.product-card.selected { border-color: var(--libertyblue); background: var(--pale-blue); }
+.product-card.selected::before { transform: scaleX(1); }
+.product-icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+.product-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+.product-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+.product-check {
+  position: absolute; top: 10px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--libertyblue); color: white;
+  font-size: 0.6rem; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+.product-card.selected .product-check { opacity: 1; }
+
+/* Form Layout */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.span-2 { grid-column: span 2; }
+label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate); }
+input, select, textarea {
+  border: 1.5px solid #A6CBDB; border-radius: var(--radius);
+  padding: 8px 11px; font-family: var(--font-body);
+  font-size: 0.82rem; color: var(--ink); background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--libertyblue);
+  box-shadow: 0 0 0 3px rgba(17,39,96,0.10);
+}
+.hint { font-size: 0.67rem; color: var(--muted); margin-top: 1px; }
+
+/* KES Currency Input */
+.currency-wrap { position: relative; display: flex; align-items: stretch; }
+.currency-prefix {
+  display: flex; align-items: center; padding: 0 10px;
+  background: #e8f0f8; border: 1.5px solid #A6CBDB;
+  border-right: none; border-radius: var(--radius) 0 0 var(--radius);
+  font-size: 0.75rem; font-weight: 700; color: var(--libertyblue);
+  white-space: nowrap; letter-spacing: 0.03em;
+}
+.currency-wrap input {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  text-align: right; font-family: var(--font-mono); font-size: 0.85rem;
+}
+.currency-wrap input:focus { border-color: var(--libertyblue); box-shadow: 0 0 0 3px rgba(17,39,96,0.10); }
+
+/* Toggle Section */
+.toggle-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; background: #f0f5fa;
+  border: 1.5px solid #c8dcea; border-radius: var(--radius);
+  margin-bottom: 10px; cursor: pointer;
+}
+.toggle-label { font-size: 0.78rem; font-weight: 600; color: var(--slate); flex: 1; }
+.toggle-sub { font-size: 0.68rem; color: var(--muted); }
+.toggle-switch {
+  width: 36px; height: 20px; border-radius: 10px;
+  background: #c0cdd8; position: relative; flex-shrink: 0;
+  transition: background 0.2s; cursor: pointer;
+}
+.toggle-switch::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: white; top: 2px; left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch.on { background: var(--libertyblue); }
+.toggle-switch.on::after { transform: translateX(16px); }
+.toggle-content { display: none; padding: 16px; background: #f7fafd; border: 1.5px solid #c8dcea; border-top: none; border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 14px; }
+.toggle-content.open { display: block; }
+.toggle-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--libertyblue); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #c8dcea; }
+
+/* Subsection Label */
+.subsection-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+  margin-bottom: 12px; margin-top: 4px;
+}
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+.btn {
+  padding: 9px 22px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.04em; cursor: pointer; border: 2px solid transparent;
+  transition: all 0.16s; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-primary { background: var(--libertyblue); color: var(--white); border-color: var(--libertyblue); }
+.btn-primary:hover { background: var(--blue); border-color: var(--blue); transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn-outline { background: transparent; color: var(--ink); border-color: #b0bfce; }
+.btn-outline:hover { border-color: var(--ink); background: var(--gray); }
+.btn-dark { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.btn-dark:hover { background: var(--slate); transform: translateY(-1px); }
+.btn-green { background: var(--green); color: var(--white); border-color: var(--green); }
+.btn-green:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--gray); margin: 22px 0; }
+
+/* Loading State */
+.loading-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(13,17,23,0.45); z-index: 200;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: var(--pale-blue); border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.loading-msg { color: white; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Quote Summary */
+.quote-header {
+  background: var(--ink); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 26px 32px; color: white;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.qh-label { font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+.qh-product { font-size: 1.3rem; font-weight: 700; color: var(--pale-blue); }
+.qh-sub { font-size: 0.75rem; color: #a0aab4; margin-top: 3px; }
+.quote-ref { font-family: var(--font-mono); font-size: 0.67rem; color: var(--muted); text-align: right; }
+.quote-ref strong { display: block; font-size: 0.82rem; color: var(--pale-blue); letter-spacing: 0.08em; }
+.quote-body {
+  background: var(--white); border: 1px solid #c0ccd8;
+  border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden;
+}
+.quote-section { padding: 20px 32px; border-bottom: 1px solid var(--gray); }
+.quote-section:last-child { border-bottom: none; }
+.qs-title { font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px dotted #dde4ed; gap: 16px; }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 0.77rem; color: var(--slate); }
+.info-val { font-size: 0.82rem; font-weight: 700; color: var(--ink); font-family: var(--font-mono); text-align: right; }
+.benefit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.benefit-card { background: var(--paper); border-radius: var(--radius); padding: 13px; border: 1px solid var(--gray); }
+.bc-label { font-size: 0.67rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.bc-val { font-family: var(--font-mono); font-size: 0.92rem; font-weight: 700; color: var(--ink); }
+.bc-val.highlight { color: var(--green); font-size: 1rem; }
+.bc-note { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+.free-benefit-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #e8f5f0; color: var(--green); border: 1px solid #b8dece;
+  border-radius: 20px; padding: 3px 10px; font-size: 0.7rem; font-weight: 700;
+  margin: 3px 3px 3px 0;
+}
+.premium-highlight {
+  background: var(--pale-blue); border: 1.5px solid var(--blue);
+  border-radius: var(--radius); padding: 14px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ph-label { font-size: 0.72rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.ph-val { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; color: var(--libertyblue); }
+.ph-freq { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.disclaimer { font-size: 0.67rem; color: var(--muted); background: var(--gray); border-radius: var(--radius); padding: 9px 12px; line-height: 1.5; margin-top: 8px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--ink); color: var(--white); padding: 10px 18px;
+  border-radius: var(--radius); font-size: 0.78rem; font-weight: 600;
+  box-shadow: var(--shadow-lg); z-index: 999; opacity: 0;
+  transform: translateY(10px); transition: all 0.25s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* Screen Transitions */
+.screen { display: none; animation: fadeUp 0.3s ease; }
+.screen.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Print */
+@media print {
+  header, .progress-bar, .btn-row, .no-print { display: none !important; }
+  body { background: white; }
+  main { padding: 0; max-width: 100%; }
+  .quote-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .screen { display: block !important; }
+  #screen-1, #screen-2 { display: none !important; }
+}
+
+@media (max-width: 620px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.span-2 { grid-column: span 1; }
+  .quote-header { flex-direction: column; gap: 12px; }
+  .benefit-grid { grid-template-columns: 1fr 1fr; }
+  header { padding: 0 16px; }
+  .progress-bar { padding: 0 12px; }
+  main { padding: 20px 12px; }
+  .quote-section { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Liberty <span>Life Assurance</span></div>
+  <div class="header-tag">Products Portal &middot; Quote Engine v1.0</div>
+</header>
+
+<div class="progress-bar">
+  <div class="step-pill active" id="pill-1"><span class="num">1</span> Select Product</div>
+  <div class="step-arrow">&rsaquo;</div>
+  <div class="step-pill" id="pill-2"><span class="num">2</span> Your Details</div>
+  <div class="step-arrow">&rsaquo;</div>
+  <div class="step-pill" id="pill-3"><span class="num">3</span> Quote Summary</div>
+</div>
+
+<!-- Loading overlay shown while awaiting Python response -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-msg">Calculating your quote...</div>
+</div>
+
+<main>
+
+<!-- Screen 1: Product Selection -->
+<div class="screen active" id="screen-1">
+  <div class="section-title">Choose a Product Class</div>
+  <div class="section-sub">Select the life assurance product you'd like to quote</div>
+  <div class="product-grid" id="product-grid">
+    <!-- Cards injected by UI_buildProductGrid() in frontend/js/libertyquotes-ui.js -->
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-next-1" onclick="UI_goToStep2()" disabled>Continue to Details &rarr;</button>
+  </div>
+</div>
+
+
+<!-- Screen 2: Details Form -->
+<div class="screen" id="screen-2">
+  <div class="section-title" id="form-title">Your Details</div>
+  <div class="section-sub">Fill in your information to generate a personalised quote</div>
+
+  <!-- Common personal details (always shown) -->
+  <div class="subsection-label">Main Life - Personal Details</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>First Name <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-firstname" placeholder="e.g. Amara" />
+    </div>
+    <div class="form-group">
+      <label>Last Name <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-lastname" placeholder="e.g. Ochieng" />
+    </div>
+    <div class="form-group">
+      <label>Date of Birth <span style="color:#c0392b">*</span></label>
+      <input type="date" id="f-dob" />
+    </div>
+    <div class="form-group">
+      <label>Gender <span style="color:#c0392b">*</span></label>
+      <select id="f-gender">
+        <option value="">-- select --</option>
+        <option value="M">Male</option>
+        <option value="F">Female</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Smoker Status</label>
+      <select id="f-smoker">
+        <option value="NS">Non-Smoker</option>
+        <option value="S">Smoker</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Occupation <span style="color:#c0392b">*</span></label>
+      <input type="text" id="f-occupation" placeholder="e.g. Software Engineer" />
+      <span class="hint"> </span>
+    </div>
+    <div class="form-group">
+      <label>Employer <span style="color:#888">(optional)</span></label>
+      <input type="text" id="f-employer" placeholder="e.g. Stanbic Bank" />
+    </div>
+    <div class="form-group">
+      <label>Email Address <span style="color:#c0392b">*</span></label>
+      <input type="email" id="f-email" placeholder="e.g. amara@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Phone Number</label>
+      <input type="tel" id="f-phone" placeholder="e.g. +254 7XX XXX XXX" />
+    </div>
+    <div class="form-group">
+      <label>ID / Passport Number</label>
+      <input type="text" id="f-idno" placeholder="National ID or Passport" />
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Product-specific fields (injected by UI_buildProductFields()) -->
+  <div id="product-fields"></div>
+
+  <hr class="divider">
+
+  <!-- Premium frequency -->
+  <div class="form-grid" style="margin-bottom: 0;">
+    <div class="form-group">
+      <label>Premium Frequency</label>
+      <select id="f-freq">
+        <option value="monthly">Monthly</option>
+        <option value="quarterly">Quarterly</option>
+        <option value="semiannual">Semi-Annual</option>
+        <option value="annually">Annual</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="UI_goToStep1()">&larr; Back</button>
+    <button class="btn btn-primary" onclick="UI_submitForQuote()">Generate Quote &rarr;</button>
+  </div>
+</div>
+
+
+<!-- Screen 3: Quote Summary -->
+<div class="screen" id="screen-3">
+  <div id="quote-container"></div>
+  <div class="btn-row no-print" style="margin-top: 22px;">
+    <button class="btn btn-outline" onclick="UI_goToStep2()">&larr; Edit Details</button>
+    <button class="btn btn-outline" onclick="UI_startOver()">New Quote</button>
+    <button class="btn btn-dark" onclick="window.print()">Print Quote</button>
+    <button class="btn btn-green" onclick="UI_sendToSales()">Send to Sales</button>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="js/libertyquotes-config.js"></script>
+<script src="js/libertyquotes-api.js"></script>
+<script src="js/libertyquotes-ui.js"></script>
+<script src="js/libertyquotes-output.js"></script>
+</body>
+</html>
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3

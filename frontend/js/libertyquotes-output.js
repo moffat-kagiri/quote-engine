@@ -2,7 +2,11 @@
 
 function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife, partialMat }) {
   const { firstname, lastname, dob, age, gender, smoker, occupation, employer, email, phone, idno } = person;
+<<<<<<< HEAD
   const { premium, benefits, freeBenefits, note, details, withProfitProjection } = result;
+=======
+  const { premium, benefits, freeBenefits, note, details } = result;
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
   const cfg = _getProductView(product);
   const freqLabel = { monthly: "Monthly", quarterly: "Quarterly", semiannual: "Semi-Annual", annually: "Annual" }[freq];
   const gLabel = { M: "Male", F: "Female" }[gender] || gender;
@@ -47,6 +51,7 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
       <span class="info-val">${partialMat.count} instalments</span>
     </div>` : "";
 
+<<<<<<< HEAD
   // WithProfit projection section
   const withProfitProjectionHtml = withProfitProjection ? _renderWithProfitProjection(withProfitProjection) : "";
   
@@ -62,6 +67,8 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
   const pensionProjectionHtml = (product === "pension" && retireAge) ? 
     _renderPensionProjection({ details, benefits, person: { age }, retire_age: retireAge, age }) : "";
 
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
   return `
   <div class="quote-header">
     <div>
@@ -100,8 +107,36 @@ function RENDER_quoteHTML({ ref, today, product, person, freq, result, jointLife
       ${pmRow}
     </div>
 
+<<<<<<< HEAD
     ${withProfitProjectionHtml}
     ${pensionProjectionHtml}
+=======
+    <div class="quote-section">
+      <div class="qs-title">Premium Payable (Select your preferred frequency)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+        <div style="border: 2px solid ${freq === 'monthly' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'monthly' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Monthly</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 12× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.monthly.toLocaleString()}</div>
+        </div>
+        <div style="border: 2px solid ${freq === 'quarterly' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'quarterly' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Quarterly</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 4× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.quarterly.toLocaleString()}</div>
+        </div>
+        <div style="border: 2px solid ${freq === 'semiannual' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'semiannual' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Semi-Annual</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay 2× per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.semiannual.toLocaleString()}</div>
+        </div>
+        <div style="border: 2px solid ${freq === 'annually' ? 'var(--primary-blue)' : '#e0e0e0'}; border-radius: 8px; padding: 12px; background: ${freq === 'annually' ? 'var(--pale-blue)' : '#f0f5fa'}; text-align: center;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Annual</div>
+          <div style="font-size: 11px; color: #999; margin-bottom: 8px;">Pay once per year</div>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-blue);">KES ${allFreqPremiums.annually.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
 
     <div class="quote-section">
       <div class="qs-title">Key Benefits (Risk - Coverage)</div>
@@ -193,6 +228,7 @@ function UI_sendToSales() {
   window.location.href = `mailto:${to}?cc=${encodeURIComponent(person.email)}&subject=${subject}&body=${body}`;
   showToast("Email client opened. Ready to send to sales!");
 }
+<<<<<<< HEAD
 
 /**
  * RENDER WITH-PROFIT PROJECTION
@@ -344,3 +380,5 @@ function _renderPensionProjection({ details, benefits, person, retire_age, age }
     </div>
   `;
 }
+=======
+>>>>>>> 1591fabd3d48927e80bb401135c77a60004eb3e3
